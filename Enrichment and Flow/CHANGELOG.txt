@@ -1,0 +1,6 @@
+CHANGELOG
+=========
+v1.0.00
+-------
+Based on Gibbon's Mastery Transcript module, v1.4.07
+Removed Level field from credits 

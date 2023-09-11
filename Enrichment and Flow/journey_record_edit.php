@@ -65,6 +65,18 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/journe
         return;
     }
 
+    if ($values['type'] == 'Opportunity') {
+        $page->navigator->addHeaderAction('view', __m('View Opportunity Details'))
+            ->setURL('/modules/Enrichment and Flow/opportunities_detail.php')
+            ->addParams(["enfOpportunityID" => $values['enfOpportunityID']])
+            ->displayLabel();
+    } else if ($values['type'] == 'Credit') {
+        $page->navigator->addHeaderAction('view', __m('View Credit Details'))
+            ->setURL('/modules/Enrichment and Flow/credits_detail.php')
+            ->addParams(["enfCreditID" => $values['enfCreditID']])
+            ->displayLabel();
+    }
+
     //Render log
     $discussionGateway = $container->get(DiscussionGateway::class);
     $logs = $discussionGateway->selectDiscussionByContext('enfJourney', $enfJourneyID);

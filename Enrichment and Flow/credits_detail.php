@@ -64,6 +64,8 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/credit
     // CREDIT DETAILS TABLE
     $table = DataTable::createDetails('unitDetails');
 
+    $table->addMetaData('allowHTML', ['outcomes']);
+
     $table->addColumn('name', '')
         ->addClass('col-span-2 text-lg font-bold')
         ->format(function ($values) {

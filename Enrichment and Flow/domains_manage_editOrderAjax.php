@@ -17,11 +17,14 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
+use Gibbon\Data\Validator;
 use Gibbon\Module\EnrichmentandFlow\Domain\DomainGateway;
 
 $_POST['address'] = '/modules/Enrichment and Flow/domains_manage.php';
 
 require_once '../../gibbon.php';
+
+$_POST = $container->get(Validator::class)->sanitize($_POST);
 
 if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/domains_manage.php') == false) {
     exit;

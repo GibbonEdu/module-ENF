@@ -17,12 +17,15 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
+use Gibbon\Data\Validator;
 use Gibbon\FileUploader;
 use Gibbon\Services\Format;
 use Gibbon\Module\EnrichmentandFlow\Domain\CreditGateway;
 use Gibbon\Module\EnrichmentandFlow\Domain\CreditMentorGateway;
 
 require_once '../../gibbon.php';
+
+$_POST = $container->get(Validator::class)->sanitize($_POST);
 
 $enfDomainID = $_GET['enfDomainID'] ?? '';
 $search = $_GET['search'] ?? '';

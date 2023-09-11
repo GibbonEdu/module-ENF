@@ -17,9 +17,12 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
+use Gibbon\Data\Validator;
 use Gibbon\Module\EnrichmentandFlow\Domain\JourneyGateway;
 
 require_once '../../gibbon.php';
+
+$_POST = $container->get(Validator::class)->sanitize($_POST);
 
 $enfJourneyID = $_POST['enfJourneyID'] ?? '';
 $search = $_GET['search'] ?? '';

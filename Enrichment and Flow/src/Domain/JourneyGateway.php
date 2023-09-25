@@ -17,7 +17,7 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-namespace Gibbon\Module\EnrichmentAndFlow\Domain;
+namespace Gibbon\Module\EnrichmentandFlow\Domain;
 
 use Gibbon\Domain\Traits\TableAware;
 use Gibbon\Domain\QueryCriteria;
@@ -189,5 +189,30 @@ class JourneyGateway extends QueryableGateway
         }
 
         return $this->runQuery($query, $criteria);
+    }
+
+    public function selectJourneyDiscussionsByStudent($gibbonPersonID, $limit = null)
+    {
+        $query = $this
+            ->newQuery()
+            ->cols(['enfJourney.*', 'enfJourney.type as journeyType', 'gibbonDiscussion.comment', 'gibbonDiscussion.type', 'gibbonDiscussion.tag', 'gibbonDiscussion.timestamp', 'gibbonPerson.surname', 'gibbonPerson.preferredName', 'gibbonPerson.image_240', '(CASE WHEN enfCredit.name IS NOT NULL THEN enfCredit.name ELSE enfOpportunity.name END) as journeyName'])
+            ->from($this->getTableName())
+            ->innerJoin('gibbonDiscussion', 'gibbonDiscussion.foreignTable="enfJourney" AND gibbonDiscussion.foreignTableID=enfJourney.enfJourneyID')
+
+            ->leftJoin('gibbonPerson', 'gibbonDiscussion.gibbonPersonID=gibbonPerson.gibbonPersonID')
+
+            ->leftJoin('enfCredit','enfJourney.enfCreditID=enfCredit.enfCreditID AND enfJourney.type=\'Credit\'')
+            ->leftJoin('enfOpportunity','enfJourney.enfOpportunityID=enfOpportunity.enfOpportunityID AND enfJourney.type=\'Opportunity\'')
+
+            ->where('enfJourney.gibbonPersonIDStudent = :gibbonPersonID')
+            ->where('gibbonDiscussion.gibbonPersonID <> :gibbonPersonID')
+            ->bindValue('gibbonPersonID', $gibbonPersonID)
+            ->orderBy(['gibbonDiscussion.timestamp DESC']);
+
+        if (!empty($limit)) {
+            $query->limit($limit);
+        }
+
+        return $this->runSelect($query);
     }
 }

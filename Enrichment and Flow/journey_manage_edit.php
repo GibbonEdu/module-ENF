@@ -24,6 +24,7 @@ use Gibbon\FileUploader;
 use Gibbon\Forms\DatabaseFormFactory;
 use Gibbon\Domain\System\DiscussionGateway;
 use Gibbon\Module\EnrichmentandFlow\Domain\JourneyGateway;
+use Gibbon\Data\Validator;
 
 $highestAction = getHighestGroupedAction($guid, '/modules/Enrichment and Flow/journey_manage_edit.php', $connection2);
 
@@ -32,11 +33,12 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/journe
     $page->addError(__('You do not have access to this action.'));
 } else {
     // Proceed!
+    $validator = $container->get(Validator::class);
     $enfJourneyID = $_GET['enfJourneyID'] ?? '';
     $search = $_GET['search'] ?? '';
     $status = $_GET['status'] ?? '';
     $gibbonPersonIDStudent = isset($_GET['gibbonPersonIDStudent'])? $_GET['gibbonPersonIDStudent'] : '';
-
+    
     $page->breadcrumbs
         ->add(__m('Manage Journey'), 'journey_manage.php');
 
@@ -102,6 +104,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/journe
         echo $templateView->fetchFromTemplate('legend.twig.html');
 
         while ($log = $logs->fetch()) {
+            $log['comment'] = $validator->sanitizeRichText($log['comment']);
             echo $page->fetchFromTemplate('logEntry.twig.html', [
                 'log' => $log
             ]);

@@ -61,6 +61,12 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/opport
     // CREDIT DETAILS TABLE
     $table = DataTable::createDetails('unitDetails');
 
+    $table->addHeaderAction('add', __m('Record Journey'))
+        ->addParam('search', $search)
+        ->addParam('enfOpportunityID', $enfOpportunityID)
+        ->setURL('/modules/Enrichment and Flow/journey_record_add.php')
+        ->displayLabel();
+
     $table->addColumn('name', '')->addClass('col-span-2 text-lg font-bold');
 
     $table->addColumn('logo', '')

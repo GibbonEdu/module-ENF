@@ -1,5 +1,9 @@
 CHANGELOG
 =========
+v1.1.00
+-------
+Added a Daily Planner dashboard and student log entires
+
 v1.0.00
 -------
 Based on Gibbon's Mastery Transcript module, v1.4.07

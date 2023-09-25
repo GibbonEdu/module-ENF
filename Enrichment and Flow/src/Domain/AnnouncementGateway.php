@@ -23,43 +23,39 @@ use Gibbon\Domain\Traits\TableAware;
 use Gibbon\Domain\QueryCriteria;
 use Gibbon\Domain\QueryableGateway;
 
-class OpportunityGateway extends QueryableGateway
+class AnnouncementGateway extends QueryableGateway
 {
     use TableAware;
 
-    private static $tableName = 'enfOpportunity';
-    private static $primaryKey = 'enfOpportunityID';
-    private static $searchableColumns = ['enfOpportunity.name'];
+    private static $tableName = 'enfAnnouncement';
+    private static $primaryKey = 'enfAnnouncementID';
+    private static $searchableColumns = ['date'];
 
     /**
      * @param QueryCriteria $criteria
      * @param bool $inactive
      * @return DataSet
      */
-    public function queryOpportunities(QueryCriteria $criteria, $all = true)
+    public function queryAnnouncements(QueryCriteria $criteria)
     {
         $query = $this
             ->newQuery()
-            ->cols(['*', '(SELECT GROUP_CONCAT(gibbonYearGroup.nameShort ORDER BY gibbonYearGroup.sequenceNumber SEPARATOR \', \') FROM gibbonYearGroup WHERE FIND_IN_SET(gibbonYearGroup.gibbonYearGroupID, enfOpportunity.gibbonYearGroupIDList)) as yearGroups'])
+            ->cols(['enfAnnouncement.*', 'gibbonPerson.title', 'gibbonPerson.preferredName', 'gibbonPerson.surname'])
+            ->leftJoin('gibbonPerson', 'gibbonPerson.gibbonPersonID=enfAnnouncement.gibbonPersonIDCreated')
             ->from($this->getTableName());
-
-        if (!$all) {
-            $query->where('active=:active')
-                  ->bindValue('active', 'Y');
-        }
 
         return $this->runQuery($query, $criteria);
     }
 
-    public function selectOpportunityByID(int $enfOpportunityID)
+    public function getAnnouncementByDate(string $date)
     {
         $query = $this
             ->newQuery()
-            ->cols(['*', '(SELECT GROUP_CONCAT(gibbonYearGroup.nameShort ORDER BY gibbonYearGroup.sequenceNumber SEPARATOR \', \') FROM gibbonYearGroup WHERE FIND_IN_SET(gibbonYearGroup.gibbonYearGroupID, enfOpportunity.gibbonYearGroupIDList)) as yearGroups'])
+            ->cols(['enfAnnouncement.*'])
             ->from($this->getTableName())
-            ->where('enfOpportunity.enfOpportunityID = :enfOpportunityID')
-            ->bindValue('enfOpportunityID', $enfOpportunityID);
+            ->where('enfAnnouncement.date = :date')
+            ->bindValue('date', $date);
 
-        return $this->runSelect($query);
+        return $this->runSelect($query)->fetch();
     }
 }

@@ -29,6 +29,8 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/journe
 } else {
     // Proceed!
     $search = $_GET['search'] ?? '';
+    $enfCreditID = $_REQUEST['enfCreditID'] ?? '';
+    $enfOpportunityID = $_REQUEST['enfOpportunityID'] ?? '';
 
     $page->breadcrumbs
         ->add(__m('Record Journey'), 'journey_record.php')
@@ -58,7 +60,8 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/journe
     );
     $row = $form->addRow();
         $row->addLabel('type', __('Type'));
-        $row->addSelect('type')->fromArray($types)->required()->placeholder();
+        $row->addSelect('type')->fromArray($types)->required()->placeholder()
+            ->selected(!empty($enfCreditID)? 'Credit' : (!empty($enfOpportunityID) ? 'Opportunity' : ''));
 
     //Credit fields
     $form->toggleVisibilityByClass('credit')->onSelect('type')->when('Credit');
@@ -66,7 +69,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/journe
     $sql = "SELECT enfCreditID AS value, enfCredit.name, enfDomain.name AS groupBy FROM enfCredit INNER JOIN enfDomain ON (enfCredit.enfDomainID=enfDomain.enfDomainID) WHERE enfCredit.active='Y' ORDER BY enfDomain.sequenceNumber, enfDomain.name, enfCredit.name";
     $row = $form->addRow()->addClass('credit');
         $row->addLabel('enfCreditID', __m('Available Credits'))->description(__m('Which credit do you want to apply for?'));
-        $row->addSelect('enfCreditID')->fromQuery($pdo, $sql, array(), 'groupBy')->required()->placeholder();
+        $row->addSelect('enfCreditID')->fromQuery($pdo, $sql, array(), 'groupBy')->required()->placeholder()->selected($enfCreditID);
 
     $data = array();
     $sql = 'SELECT enfCredit.enfCreditID as chainedTo, CONCAT(enfCredit.enfCreditID, \'-\', gibbonPerson.gibbonPersonID) AS value, CONCAT(surname, \', \', preferredName) AS name FROM enfCredit JOIN enfCreditMentor ON (enfCreditMentor.enfCreditID=enfCredit.enfCreditID) JOIN gibbonPerson ON (enfCreditMentor.gibbonPersonID=gibbonPerson.gibbonPersonID) WHERE gibbonPerson.status=\'Full\' ORDER BY surname, preferredname';
@@ -83,7 +86,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/journe
     $sql = "SELECT enfOpportunityID AS value, enfOpportunity.name FROM enfOpportunity WHERE enfOpportunity.active='Y' AND gibbonYearGroupIDList LIKE :gibbonYearGroupID ORDER BY enfOpportunity.name";
     $row = $form->addRow()->addClass('opportunity');
         $row->addLabel('enfOpportunityID', __m('Available Opportunities'))->description(__m('Which opportunity do you want to apply for?'));
-        $row->addSelect('enfOpportunityID')->fromQuery($pdo, $sql, $data)->required()->placeholder();
+        $row->addSelect('enfOpportunityID')->fromQuery($pdo, $sql, $data)->required()->placeholder()->selected($enfOpportunityID);
 
     $sql = 'SELECT enfOpportunity.enfOpportunityID as chainedTo, CONCAT(enfOpportunity.enfOpportunityID, \'-\', gibbonPerson.gibbonPersonID) AS value, CONCAT(surname, \', \', preferredName) AS name FROM enfOpportunity JOIN enfOpportunityMentor ON (enfOpportunityMentor.enfOpportunityID=enfOpportunity.enfOpportunityID) JOIN gibbonPerson ON (enfOpportunityMentor.gibbonPersonID=gibbonPerson.gibbonPersonID) WHERE gibbonPerson.status=\'Full\' ORDER BY surname, preferredname';
     $row = $form->addRow()->addClass('opportunity');

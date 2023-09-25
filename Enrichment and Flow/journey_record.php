@@ -134,7 +134,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/journe
                 $actions->addAction('edit', __('Edit'))
                     ->setURL('/modules/Enrichment and Flow/journey_record_edit.php');
             }
-            if ($category['status'] != 'Complete - Approved') {
+            if ($category['status'] == 'Current - Pending') {
                 $actions->addAction('delete', __('Delete'))
                     ->setURL('/modules/Enrichment and Flow/journey_record_delete.php');
             }

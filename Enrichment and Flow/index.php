@@ -19,11 +19,6 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 use Gibbon\Domain\System\SettingGateway;
 
-@session_start();
-
-//Module includes
-include './modules/'.$session->get('module').'/moduleFunctions.php';
-
 if (isModuleAccessible($guid, $connection2) == false) {
     //Acess denied
     $page->addError(__('You do not have access to this action.'));

@@ -22,7 +22,7 @@ use Gibbon\Domain\System\SettingGateway;
 
 require_once '../../gibbon.php';
 
-$_POST = $container->get(Validator::class)->sanitize($_POST);
+$_POST = $container->get(Validator::class)->sanitize($_POST, ['indexText' => 'HTML']);
 
 $URL = $session->get('absoluteURL').'/index.php?q=/modules/Enrichment and Flow/settings.php';
 
@@ -36,13 +36,21 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/settin
 
     $settingsToUpdate = [
         'Enrichment and Flow' => [
-            'indexText'
+            'indexText',
+            'taskCategories',
         ],
     ];
 
     foreach ($settingsToUpdate as $scope => $settings) {
         foreach ($settings as $name) {
             $value = $_POST[$name] ?? '';
+
+            // Handle categories
+            if ($name == 'taskCategories') {
+                $value = array_combine(array_keys($_POST['order'] ?? []), array_values($value));
+                ksort($value);
+                $value = json_encode($value);
+            }
 
             $updated = $settingGateway->updateSettingByScope($scope, $name, $value);
             $partialFail &= !$updated;

@@ -24,12 +24,14 @@ use Gibbon\FileUploader;
 use Gibbon\Forms\DatabaseFormFactory;
 use Gibbon\Domain\System\DiscussionGateway;
 use Gibbon\Module\EnrichmentandFlow\Domain\JourneyGateway;
+use Gibbon\Data\Validator;
 
 if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/journey_record_edit.php') == false) {
     // Access denied
     $page->addError(__('You do not have access to this action.'));
 } else {
     // Proceed!
+    $validator = $container->get(Validator::class);
     $enfJourneyID = $_GET['enfJourneyID'] ?? '';
     $search = $_GET['search'] ?? '';
 
@@ -91,6 +93,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/journe
         echo $templateView->fetchFromTemplate('legend.twig.html');
 
         while ($log = $logs->fetch()) {
+            $log['comment'] = $validator->sanitizeRichText($log['comment']);
             echo $page->fetchFromTemplate('logEntry.twig.html', [
                 'log' => $log
             ]);

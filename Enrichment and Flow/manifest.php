@@ -22,10 +22,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //Basic variables
 $name = 'Enrichment and Flow';
 $description = 'This module allows schools to implement ICHK\'s Enrichment and Flow (ENF) programme, with functionality to create, track and issue credits. Students undertake learning opportunities to earn credits, producing an evidenced portfolio within Gibbon. ';
-$entryURL = 'index.php';
+$entryURL = 'planner.php';
 $type = 'Additional';
 $category = 'Learn';
-$version = '1.0.00';
+$version = '1.1.00';
 $author = 'Ross Parker';
 $url = 'https://gibbonedu.org';
 
@@ -109,8 +109,25 @@ $moduleTables[] = "CREATE TABLE `enfJourney` (
   INDEX(`status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
 
+$moduleTables[] = "CREATE TABLE `enfPlannerEntry` ( 
+    `enfPlannerEntryID` INT(12) UNSIGNED ZEROFILL NOT NULL AUTO_INCREMENT , 
+    `gibbonPersonID` INT(10) UNSIGNED ZEROFILL NOT NULL , 
+    `date` DATE NOT NULL , `tasks` TEXT NULL , 
+    PRIMARY KEY (`enfPlannerEntryID`), 
+    UNIQUE KEY `entry` (`gibbonPersonID`, `date`)
+) ENGINE = InnoDB;";
+
+$moduleTables[] = "CREATE TABLE `enfAnnouncement` ( 
+    `enfAnnouncementID` INT(8) UNSIGNED ZEROFILL NOT NULL AUTO_INCREMENT , 
+    `date` DATE NOT NULL , `content` TEXT NOT NULL , 
+    `gibbonPersonIDCreated` INT(10) UNSIGNED ZEROFILL NULL , 
+    `gibbonPersonIDModified` INT(10) UNSIGNED ZEROFILL NULL , 
+    PRIMARY KEY (`enfAnnouncementID`), UNIQUE KEY `date` (`date`)
+) ENGINE = InnoDB;";
+
 //Settings - none
-$gibbonSetting[] = "INSERT INTO `gibbonSetting` (`gibbonSettingID` ,`scope` ,`name` ,`nameDisplay` ,`description` ,`value`) VALUES (NULL , 'Enrichment and Flow', 'indexText', 'Index Text', 'Welcome text for users arriving in the module.', '')";
+$gibbonSetting[] = "INSERT INTO `gibbonSetting` (`scope` ,`name` ,`nameDisplay` ,`description` ,`value`) VALUES ('Enrichment and Flow', 'indexText', 'Index Text', 'Welcome text for users arriving in the module.', '')";
+$gibbonSetting[] = "INSERT INTO `gibbonSetting` (`scope`, `name`, `nameDisplay`, `description`, `value`) VALUES ('Enrichment and Flow', 'taskCategories', 'Planner Task Categories', 'Available category names and colours used for selecting and displaying planner tasks.', '[{\"category\":\"Homework\",\"0\":\"#fdba74\",\"color\":\"#fdba74\"},{\"category\":\"Studying\",\"0\":\"#5eead4\",\"color\":\"#5eead4\"},{\"category\":\"Sports\",\"0\":\"#7dd3fc\",\"color\":\"#7dd3fc\"},{\"category\":\"Exercise\",\"0\":\"#a5b4fc\",\"color\":\"#a5b4fc\"},{\"category\":\"Games\",\"0\":\"#f9a8d4\",\"color\":\"#f9a8d4\"},{\"category\":\"Music\",\"0\":\"#ffa1b5\",\"color\":\"#ffa1b5\"},{\"category\":\"Reading\",\"0\":\"#c4b5fd\",\"color\":\"#c4b5fd\"},{\"category\":\"Personal Project\",\"0\":\"#d8b4fe\",\"color\":\"#d8b4fe\"},{\"category\":\"Other\",\"0\":\"#d1d5db\",\"color\":\"#d1d5db\"}]');";
 
 //Action rows
 $actionRows[] = [
@@ -344,6 +361,66 @@ $actionRows[] = [
     'menuShow'                  => 'Y',
     'defaultPermissionAdmin'    => 'N',
     'defaultPermissionTeacher'  => 'Y',
+    'defaultPermissionStudent'  => 'N',
+    'defaultPermissionParent'   => 'N',
+    'defaultPermissionSupport'  => 'N',
+    'categoryPermissionStaff'   => 'Y',
+    'categoryPermissionStudent' => 'N',
+    'categoryPermissionParent'  => 'N',
+    'categoryPermissionOther'   => 'N',
+];
+
+$actionRows[] = [
+    'name'                      => 'Planner Overview',
+    'precedence'                => '1',
+    'category'                  => 'Flow',
+    'description'               => 'An ENF teacher dashboard view of daily plans and recent activity.',
+    'URLList'                   => 'planner.php,planner_view.php',
+    'entryURL'                  => 'planner.php',
+    'entrySidebar'              => 'Y',
+    'menuShow'                  => 'Y',
+    'defaultPermissionAdmin'    => 'Y',
+    'defaultPermissionTeacher'  => 'Y',
+    'defaultPermissionStudent'  => 'N',
+    'defaultPermissionParent'   => 'N',
+    'defaultPermissionSupport'  => 'N',
+    'categoryPermissionStaff'   => 'Y',
+    'categoryPermissionStudent' => 'N',
+    'categoryPermissionParent'  => 'N',
+    'categoryPermissionOther'   => 'N',
+];
+
+$actionRows[] = [
+    'name'                      => 'Plan & Log',
+    'precedence'                => '0',
+    'category'                  => 'Flow',
+    'description'               => 'An ENF student dashboard view of daily plans and recent activity.',
+    'URLList'                   => 'planner.php,planner_view.php',
+    'entryURL'                  => 'planner.php',
+    'entrySidebar'              => 'Y',
+    'menuShow'                  => 'Y',
+    'defaultPermissionAdmin'    => 'N',
+    'defaultPermissionTeacher'  => 'N',
+    'defaultPermissionStudent'  => 'Y',
+    'defaultPermissionParent'   => 'N',
+    'defaultPermissionSupport'  => 'N',
+    'categoryPermissionStaff'   => 'N',
+    'categoryPermissionStudent' => 'Y',
+    'categoryPermissionParent'  => 'N',
+    'categoryPermissionOther'   => 'N',
+];
+
+$actionRows[] = [
+    'name'                      => 'Manage Announcements',
+    'precedence'                => '0',
+    'category'                  => 'Manage',
+    'description'               => 'Manage announcements by date.',
+    'URLList'                   => 'announcements_manage.php,announcements_manage_add.php,announcements_manage_edit.php,announcements_manage_delete.php',
+    'entryURL'                  => 'announcements_manage.php',
+    'entrySidebar'              => 'Y',
+    'menuShow'                  => 'Y',
+    'defaultPermissionAdmin'    => 'Y',
+    'defaultPermissionTeacher'  => 'N',
     'defaultPermissionStudent'  => 'N',
     'defaultPermissionParent'   => 'N',
     'defaultPermissionSupport'  => 'N',

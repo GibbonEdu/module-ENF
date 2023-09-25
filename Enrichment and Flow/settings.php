@@ -36,9 +36,37 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/settin
     $form->addHiddenValue('address', $session->get('address'));
 
     $setting = $settingGateway->getSettingByScope('Enrichment and Flow', 'indexText', true);
-    $row = $form->addRow();
-        $row->addLabel($setting['name'], __m($setting['nameDisplay']))->description(__m($setting['description']));
-        $row->addTextArea($setting['name'])->required()->setValue($setting['value']);
+    
+    $column = $form->addRow()->addColumn();
+        $column->addLabel($setting['name'], __m($setting['nameDisplay']))->description(__m($setting['description']));
+        $column->addEditor($setting['name'], $guid)->required()->setValue($setting['value']);
+
+    // CATEGORIES
+    $setting = $settingGateway->getSettingByScope('Enrichment and Flow', 'taskCategories', true);
+
+    $addBlockButton = $form->getFactory()->createButton(__('Add Category'))->addClass('addBlock');
+
+    $blockTemplate = $form->getFactory()->createTable()->setClass('blank');
+    $row = $blockTemplate->addRow();
+        $row->addTextField('category')->setClass('w-full mr-2')->required()->placeholder(__m('Category Name'));
+        $row->addColor('color')->setClass('w-48 mr-2 colorField')->required()->setValue('#ffffff');
+
+    // Custom Blocks
+    $column = $form->addRow()->addColumn();
+    $column->addLabel($setting['name'], __m($setting['nameDisplay']))->description(__m($setting['description']));
+    $customBlocks = $column->addCustomBlocks('taskCategories', $session)
+        ->fromTemplate($blockTemplate, true)
+        ->settings(array('inputNameStrategy' => 'object', 'addOnEvent' => 'click', 'sortable' => true))
+        ->placeholder(__('Add some categories...'))
+        ->addToolInput($addBlockButton);
+
+    // Add existing tasks, or create some blank ones
+    $tasks = json_decode($setting['value'] ?? '', true);
+    if (!empty($tasks)) {
+        foreach ($tasks ?? [] as $index => $task) {
+            $customBlocks->addBlock($index, $task);
+        }
+    }
 
     $row = $form->addRow();
         $row->addFooter();
@@ -46,3 +74,22 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/settin
 
     echo $form->getOutput();
 }
+?>
+<script>
+    $(document).on('change', '.colorPicker', function () {
+        var target = $(this).next('input.colorField');
+        $(target).val($(this).val());
+    });
+
+    $(document).on('change', '.colorField', function () {
+        var target = $(this).prev('input.colorPicker');
+        $(target).val($(this).val());
+    });
+
+    $('#taskCategories').on('addedBlock', function (event, block) {
+        $('.colorPicker', block).each(function () {
+            var target = $(this).next('input.colorField');
+            $(this).val($(target).val());
+        });
+    });
+</script>

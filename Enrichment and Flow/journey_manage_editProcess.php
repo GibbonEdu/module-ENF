@@ -81,12 +81,15 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/journe
 
     //If approved, get last evidence to store in journey later
     if ($data['type'] == 'Complete - Approved') {
+        $data['tag'] = 'success';
         $logs = $discussionGateway->selectDiscussionByContext('enfJourney', $enfJourneyID, 'Evidence', 'DESC');
         if ($logs->rowCount() > 0) {
             $log = $logs->fetch();
             $evidenceType = $log['attachmentType'];
             $evidenceLocation = $log['attachmentLocation'];
         }
+    } else if ($data['type'] == 'Evidence Not Yet Approved') {
+        $data['tag'] = 'warning';
     }
 
     // Validate the required values are present

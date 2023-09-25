@@ -64,6 +64,12 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/credit
     // CREDIT DETAILS TABLE
     $table = DataTable::createDetails('unitDetails');
 
+    $table->addHeaderAction('add', __m('Record Journey'))
+        ->addParam('search', $search)
+        ->addParam('enfCreditID', $enfCreditID)
+        ->setURL('/modules/Enrichment and Flow/journey_record_add.php')
+        ->displayLabel();
+
     $table->addMetaData('allowHTML', ['outcomes']);
 
     $table->addColumn('name', '')

@@ -18,33 +18,27 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
 use Gibbon\Forms\Prefab\DeleteForm;
-use Gibbon\Module\EnrichmentandFlow\Domain\JourneyGateway;
+use Gibbon\Module\EnrichmentandFlow\Domain\AnnouncementGateway;
 
-if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/journey_record_delete.php') == false) {
+if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/announcements_manage_delete.php') == false) {
     // Access denied
     $page->addError(__('You do not have access to this action.'));
 } else {
     // Proceed!
-    $enfJourneyID = $_GET['enfJourneyID'] ?? '';
-    $search = $_GET['search'] ?? '';
+    $enfAnnouncementID = $_GET['enfAnnouncementID'] ?? '';
 
-    if (empty($enfJourneyID)) {
+    if (empty($enfAnnouncementID)) {
         $page->addError(__('You have not specified one or more required parameters.'));
         return;
     }
 
-    $values = $container->get(JourneyGateway::class)->getByID($enfJourneyID);
+    $values = $container->get(AnnouncementGateway::class)->getByID($enfAnnouncementID);
 
     if (empty($values)) {
         $page->addError(__('The specified record cannot be found.'));
         return;
     }
 
-    if ($values['status'] != 'Current - Pending') {
-        $page->addError(__('You do not have access to this action.'));
-        return;
-    }
-
-    $form = DeleteForm::createForm($session->get('absoluteURL')."/modules/Enrichment and Flow/journey_record_deleteProcess.php?search=$search");
+    $form = DeleteForm::createForm($session->get('absoluteURL').'/modules/Enrichment and Flow/announcements_manage_deleteProcess.php');
     echo $form->getOutput();
 }

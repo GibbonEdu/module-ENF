@@ -71,13 +71,34 @@ class StudentPlannerView
         $class = $this->dailyPlannerGateway->getENFClassByStudent($gibbonSchoolYearID, $gibbonPersonID);
         $teachers = $this->dailyPlannerGateway->selectENFTeachersByStudent($gibbonSchoolYearID, $gibbonPersonID)->fetchAll();
 
+        $categoryList = $this->settingGateway->getSettingByScope('Enrichment and Flow', 'taskCategories');
+        $categoryList = json_decode($categoryList ?? '', true) ?? [];
+        $categories = array_combine(array_column($categoryList, 'category'), array_column($categoryList, 'color'));
+
         $plannerEntry = $this->dailyPlannerGateway->getPlannerEntryByDate($gibbonPersonID, $this->date);
         $url = Url::fromModuleRoute('Enrichment and Flow', 'planner_view.php');
 
         if (empty($class)) return;
 
+        // Display task view
+        if (!empty($plannerEntry['enfPlannerEntryID'])) {
+            $tasks = $this->dailyPlannerGateway->selectPlannerTasksByEntry($plannerEntry['enfPlannerEntryID'])->fetchAll();
+
+            if (!empty($tasks)) {
+                $minutes = array_sum(array_column($tasks, 'minutes'));
+                $taskCode = $page->fetchFromTemplate('tasks.twig.html', [
+                    'tasks' => $tasks,
+                    'count' => count($tasks),
+                    'minutes' => max($minutes, 140),
+                    'totalMinutes' => $minutes,
+                    'width' => 'w-full',
+                    'categories' => $categories,
+                ]);
+            }
+        }
+
         // New entry
-        $form = Form::create('plannerEntry', $this->session->get('absoluteURL').'/modules/Enrichment and Flow/planner_addProcess.php');
+        $form = Form::create('plannerEntry', $this->session->get('absoluteURL').'/modules/Enrichment and Flow/plannerProcess.php');
         $form->setTitle(__m('Plan & Log'));
         $form->setClass('blank');
 
@@ -85,36 +106,41 @@ class StudentPlannerView
         $form->addHiddenValue('enfPlannerEntryID', $plannerEntry['enfPlannerEntryID'] ?? '');
         $form->addHiddenValue('date', $this->date);
 
+        if (!empty($taskCode)) {
+            $form->addRow()->addContent('<a href="'.$url.'" class="block mb-4">'.$taskCode.'</a>');
+        }
+
         // TASKS
-        $categories = $this->settingGateway->getSettingByScope('Enrichment and Flow', 'taskCategories');
-        $categories = array_column(json_decode($categories ?? '', true) ?? [], 'category');
+        if ($this->date >= date('Y-m-d')) {
+            $categories = array_column($categoryList ?? [], 'category');
 
-        // Custom Block Template
-        $addBlockButton = $form->getFactory()->createButton(__('Add Task'))->addClass('addBlock float-right');
+            // Custom Block Template
+            $addBlockButton = $form->getFactory()->createButton(__('Add Task'))->addClass('addBlock float-right');
 
-        $blockTemplate = $form->getFactory()->createTable()->setClass('blank');
-        $row = $blockTemplate->addRow();
-            $row->addSelect('category')->fromArray($categories)->setClass('w-48 mr-2')->required()->placeholder();
-            $row->addNumber('minutes')->setClass('w-24 mr-2')->onlyInteger(true)->required()->placeholder(__m('Mins'));
-            $row->addTextField('description')->setClass('w-full')->required()->placeholder(__('Description'));
+            $blockTemplate = $form->getFactory()->createTable()->setClass('blank');
+            $row = $blockTemplate->addRow();
+                $row->addSelect('category')->fromArray($categories)->setClass('w-48 mr-2')->required()->placeholder();
+                $row->addNumber('minutes')->setClass('w-24 mr-2')->onlyInteger(true)->required()->placeholder(__m('Mins'));
+                $row->addTextField('description')->maxLength(120)->setClass('w-full')->required()->placeholder(__('Description'))
+                    ->append('<input type="hidden" id="enfPlannerTaskID" name="enfPlannerTaskID" value="">');
 
-        // Custom Blocks
-        $row = $form->addRow();
-        $customBlocks = $row->addCustomBlocks('tasks', $this->session)
-            ->fromTemplate($blockTemplate, true)
-            ->settings(array('inputNameStrategy' => 'object', 'addOnEvent' => 'click', 'sortable' => true))
-            ->placeholder(__('Add some tasks to your plan...'))
-            ->addToolInput($addBlockButton);
+            // Custom Blocks
+            $row = $form->addRow();
+            $customBlocks = $row->addCustomBlocks('tasks', $this->session)
+                ->fromTemplate($blockTemplate, true)
+                ->settings(array('inputNameStrategy' => 'object', 'addOnEvent' => 'click', 'sortable' => true))
+                ->placeholder(__('Add some tasks to your plan...'))
+                ->addToolInput($addBlockButton);
 
-        // Add existing tasks, or create some blank ones
-        $tasks = json_decode($plannerEntry['tasks'] ?? '', true);
-        if (!empty($tasks)) {
-            foreach ($tasks ?? [] as $index => $task) {
-                $customBlocks->addBlock($index, $task);
-            }
-        } else {
-            for ($n = 0; $n < 3; $n++) {
-                $customBlocks->addBlock($n);
+            // Add existing tasks, or create some blank ones
+            if (!empty($tasks)) {
+                foreach ($tasks ?? [] as $index => $task) {
+                    $customBlocks->addBlock($index, $task);
+                }
+            } else {
+                for ($n = 0; $n < 3; $n++) {
+                    $customBlocks->addBlock($n);
+                }
             }
         }
 

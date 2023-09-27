@@ -47,7 +47,9 @@ class StaffPlannerView
     protected $dailyPlannerGateway;
     protected $journeyGateway;
     protected $attendanceGateway;
+
     protected $date;
+    protected $gibbonCourseClassID;
 
     public function __construct(Session $session, SettingGateway $settingGateway, DailyPlannerGateway $dailyPlannerGateway, JourneyGateway $journeyGateway, AttendanceLogPersonGateway $attendanceGateway)
     {
@@ -65,6 +67,13 @@ class StaffPlannerView
         return $this;
     }
 
+    public function setClass($gibbonCourseClassID)
+    {
+        $this->gibbonCourseClassID = $gibbonCourseClassID;
+
+        return $this;
+    }
+
     public function compose(Page $page)
     {
         $gibbonSchoolYearID = $this->session->get('gibbonSchoolYearID');
@@ -72,10 +81,15 @@ class StaffPlannerView
         $guid = $this->session->get('guid');
 
         $categories = $this->settingGateway->getSettingByScope('Enrichment and Flow', 'taskCategories');
-        $categories = json_decode($categories, true);
+        $categories = json_decode($categories ?? '', true) ?? [];
         $categories = array_combine(array_column($categories, 'category'), array_column($categories, 'color'));
 
-        $students = $this->dailyPlannerGateway->selectENFStudentsByTeacher($gibbonSchoolYearID, $gibbonPersonID)->fetchAll();
+        if (!empty($this->gibbonCourseClassID)) {
+            $students = $this->dailyPlannerGateway->selectENFStudentsByClass($gibbonSchoolYearID, $this->gibbonCourseClassID)->fetchAll();
+        } else {
+            $students = $this->dailyPlannerGateway->selectENFStudentsByTeacher($gibbonSchoolYearID, $gibbonPersonID)->fetchAll();
+        }
+        
         $discussion = [];
 
         foreach ($students as $student) {
@@ -86,18 +100,20 @@ class StaffPlannerView
             $log = ($attendance->rowCount() > 0) ? $attendance->fetch() : [];
             $isAbsent = !empty($log) && ($log['direction'] == 'Out' || $log['scope'] == 'Offsite');
 
-            if (!empty($plannerEntry['tasks'])) {
-                $tasks = json_decode($plannerEntry['tasks'], true);
-                $minutes = array_sum(array_column($tasks, 'minutes'));
-
-                $taskCode = $page->fetchFromTemplate('tasks.twig.html', [
-                    'tasks' => $tasks,
-                    'count' => count($tasks),
-                    'minutes' => max($minutes, 140),
-                    'totalMinutes' => $minutes,
-                    'width' => 'w-64',
-                    'categories' => $categories,
-                ]);
+            if (!empty($plannerEntry['enfPlannerEntryID'])) {
+                $tasks = $this->dailyPlannerGateway->selectPlannerTasksByEntry($plannerEntry['enfPlannerEntryID'])->fetchAll();
+    
+                if (!empty($tasks)) {
+                    $minutes = array_sum(array_column($tasks, 'minutes'));
+                    $taskCode = $page->fetchFromTemplate('tasks.twig.html', [
+                        'tasks' => $tasks,
+                        'count' => count($tasks),
+                        'minutes' => max($minutes, 140),
+                        'totalMinutes' => $minutes,
+                        'width' => 'w-64',
+                        'categories' => $categories,
+                    ]);
+                }
             }
 
             if (!empty($plannerEntry)) {

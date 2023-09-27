@@ -22,6 +22,7 @@ use Gibbon\Forms\Form;
 use Gibbon\Module\EnrichmentandFlow\View\StudentPlannerView;
 use Gibbon\Module\EnrichmentandFlow\View\StaffPlannerView;
 use Gibbon\Module\EnrichmentandFlow\Domain\AnnouncementGateway;
+use Gibbon\Module\EnrichmentandFlow\Domain\DailyPlannerGateway;
 
 if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/planner.php') == false) {
     // Access denied
@@ -33,6 +34,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/planne
         return;
     }
 
+    $gibbonCourseClassID = $_REQUEST['gibbonCourseClassID'] ?? null;
     $date = !empty($_GET['date'])? Format::dateConvert($_GET['date']) : date('Y-m-d');
     $announcement = $container->get(AnnouncementGateway::class)->getAnnouncementByDate($date);
 
@@ -47,8 +49,15 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/planne
     }
 
     $col = $row->addColumn()->addClass('flex items-center justify-end');
-        $col->addDate('date')->setValue(Format::date($date))->setClass('shortWidth');
-        $col->addSubmit(__('Go'));
+
+    // Display class selector
+    if ($highestAction == 'Planner Overview') {
+        $classes = $container->get(DailyPlannerGateway::class)->selectAllENFClasses($session->get('gibbonSchoolYearID'))->fetchKeyPair();
+        $col->addSelect('gibbonCourseClassID')->fromArray($classes)->setClass('shortWidth mr-1')->selected($gibbonCourseClassID)->placeholder('[ '.__m('Select a Class').' ]');
+    }
+
+    $col->addDate('date')->setValue(Format::date($date))->setClass('shortWidth');
+    $col->addSubmit(__('Go'));
 
     $page->write($form->getOutput());
 
@@ -61,7 +70,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/planne
     // Display the ENF dashboards
     if ($highestAction == 'Planner Overview') {
         $page->breadcrumbs->add(__m('Planner Overview').' ('.Format::date($date).')');
-        $planner = $container->get(StaffPlannerView::class)->setDate($date)->compose($page);
+        $planner = $container->get(StaffPlannerView::class)->setDate($date)->setClass($gibbonCourseClassID)->compose($page);
 
     } elseif ($highestAction == 'Plan & Log') {
         $page->breadcrumbs->add(__m('Plan & Log').' ('.Format::date($date).')');

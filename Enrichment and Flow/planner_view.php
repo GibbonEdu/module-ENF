@@ -65,19 +65,21 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/planne
     foreach ($plannerEntries as $date => $discussion) {
         $plannerEntry = current($discussion);
         $taskCode = '';
-        
-        if (!empty($plannerEntry['tasks'])) {
-            $tasks = json_decode($plannerEntry['tasks'], true);
-            $minutes = array_sum(array_column($tasks, 'minutes'));
 
-            $taskCode = $page->fetchFromTemplate('tasks.twig.html', [
-                'tasks'        => $tasks,
-                'count'        => count($tasks),
-                'minutes'      => max($minutes, 140),
-                'totalMinutes' => $minutes,
-                'width'        => 'w-64',
-                'categories'   => $categories,
-            ]);
+        if (!empty($plannerEntry['enfPlannerEntryID'])) {
+            $tasks = $dailyPlannerGateway->selectPlannerTasksByEntry($plannerEntry['enfPlannerEntryID'])->fetchAll();
+
+            if (!empty($tasks)) {
+                $minutes = array_sum(array_column($tasks, 'minutes'));
+                $taskCode = $page->fetchFromTemplate('tasks.twig.html', [
+                    'tasks' => $tasks,
+                    'count' => count($tasks),
+                    'minutes' => max($minutes, 140),
+                    'totalMinutes' => $minutes,
+                    'width' => 'w-64',
+                    'categories' => $categories,
+                ]);
+            }
         }
 
         $page->write('<div class="flex items-end justify-between w-full"><h4 class="mb-0 pb-0">'.Format::dateReadable($plannerEntry['date']).'</h4>'.$taskCode.'</div>');

@@ -2,7 +2,8 @@ CHANGELOG
 =========
 v1.1.00
 -------
-Added a Daily Planner dashboard and student log entires
+Added a student and staff Planner dashboard and student log entires
+Added the option to set daily announcements for the dashboard
 
 v1.0.00
 -------

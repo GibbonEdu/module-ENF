@@ -19,12 +19,13 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 use Gibbon\Data\Validator;
 use Gibbon\Services\Format;
-use Gibbon\Module\EnrichmentandFlow\Domain\DailyPlannerGateway;
 use Gibbon\Domain\System\DiscussionGateway;
+use Gibbon\Module\EnrichmentandFlow\Domain\DailyPlannerGateway;
+use Gibbon\Module\EnrichmentandFlow\Domain\PlannerTaskGateway;
 
 require_once '../../gibbon.php';
 
-$_POST = $container->get(Validator::class)->sanitize($_POST, ['comment' => 'HTML']);
+$_POST = $container->get(Validator::class)->sanitize($_POST);
 
 $date = $_POST['date'] ?? '';
 
@@ -36,15 +37,9 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/planne
     exit;
 } else {
     // Proceed!
-    $dailyPlannerGatewayGateway = $container->get(DailyPlannerGateway::class);
+    $dailyPlannerGateway = $container->get(DailyPlannerGateway::class);
+    $plannerTasksGateway = $container->get(PlannerTaskGateway::class);
     $gibbonPersonID = $session->get('gibbonPersonID');
-
-    // Sort and save tasks as a JSON
-    if (!empty($_POST['tasks'])) {
-        $tasks = $_POST['tasks'] ?? [];
-        $tasks = array_combine(array_keys($_POST['order'] ?? []), array_values($tasks));
-        ksort($tasks);
-    }
 
     $enfPlannerEntryID = $_POST['enfPlannerEntryID'] ?? '';
 
@@ -53,7 +48,6 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/planne
         $data = [
             'gibbonPersonID' => $gibbonPersonID,
             'date'           => $_POST['date'] ?? '',
-            'tasks'          => !empty($tasks) ? json_encode($tasks) : null,
         ];
 
         // Validate the required values are present
@@ -64,24 +58,53 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/planne
         }
 
         // Validate that this record is unique
-        if (!$dailyPlannerGatewayGateway->unique($data, ['gibbonPersonID', 'date'])) {
+        if (!$dailyPlannerGateway->unique($data, ['gibbonPersonID', 'date'])) {
             $URL .= '&return=error7';
             header("Location: {$URL}");
             exit;
         }
 
-        $enfPlannerEntryID = $dailyPlannerGatewayGateway->insert($data);
+        $enfPlannerEntryID = $dailyPlannerGateway->insert($data);
     } else {
-        $dailyPlannerGatewayGateway->update($enfPlannerEntryID, [
+        $dailyPlannerGateway->update($enfPlannerEntryID, [
             'tasks' => !empty($tasks) ? json_encode($tasks) : null,
         ]);
     }
 
     // Validate the database relationships exist
-    if (!$dailyPlannerGatewayGateway->exists($enfPlannerEntryID)) {
+    if (!$dailyPlannerGateway->exists($enfPlannerEntryID)) {
         $URL .= '&return=error2';
         header("Location: {$URL}");
         exit;
+    }
+
+    // Sort and save tasks as a JSON
+    if (!empty($_POST['tasks']) && is_array($_POST['tasks'])) {
+        $tasks = array_map(function ($item) {
+            $item['category'] = strip_tags($item['category']);
+            $item['minutes'] = intval($item['minutes']);
+            $item['description'] = strip_tags($item['description']);
+            return $item;
+        }, $_POST['tasks'] ?? []);
+
+        $tasks = array_combine(array_keys($_POST['order'] ?? []), array_values($tasks));
+        ksort($tasks);
+
+        $taskIDs = [];
+        foreach ($tasks as $order => $task) {
+            $task['enfPlannerEntryID'] = $enfPlannerEntryID;
+            $task['sequenceNumber'] = $order;
+
+            if (!empty($task['enfPlannerTaskID'])) {
+                $plannerTasksGateway->update($task['enfPlannerTaskID'], $task);
+            } else {
+                $task['enfPlannerTaskID'] = $plannerTasksGateway->insert($task);
+            }
+
+            $taskIDs[] = str_pad($task['enfPlannerTaskID'], 12, '0', STR_PAD_LEFT);
+        } 
+
+        $plannerTasksGateway->deleteTasksByEntryNotInList($enfPlannerEntryID, $taskIDs);
     }
 
     // Build the discussion entry

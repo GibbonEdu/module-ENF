@@ -37,6 +37,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/planne
     $gibbonCourseClassID = $_REQUEST['gibbonCourseClassID'] ?? null;
     $date = !empty($_GET['date'])? Format::dateConvert($_GET['date']) : date('Y-m-d');
     $announcement = $container->get(AnnouncementGateway::class)->getAnnouncementByDate($date);
+    $dailyPlannerGateway = $container->get(DailyPlannerGateway::class);
 
     // Date selector form
     $form = Form::create('dateSelect', $session->get('absoluteURL').'/index.php?q=/modules/Enrichment and Flow/planner.php', 'get');
@@ -52,8 +53,9 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/planne
 
     // Display class selector
     if ($highestAction == 'Planner Overview') {
-        $classes = $container->get(DailyPlannerGateway::class)->selectAllENFClasses($session->get('gibbonSchoolYearID'))->fetchKeyPair();
-        $col->addSelect('gibbonCourseClassID')->fromArray($classes)->setClass('shortWidth mr-1')->selected($gibbonCourseClassID)->placeholder('[ '.__m('Select a Class').' ]');
+        $class = $dailyPlannerGateway->getENFClassByPerson($session->get('gibbonSchoolYearID'), $session->get('gibbonPersonID'));
+        $classes = $dailyPlannerGateway->selectAllENFClasses($session->get('gibbonSchoolYearID'))->fetchKeyPair();
+        $col->addSelect('gibbonCourseClassID')->fromArray($classes)->setClass('shortWidth mr-1')->selected($gibbonCourseClassID ?? $class['gibbonCourseClassID'] ?? '')->placeholder('[ '.__m('Select a Class').' ]');
     }
 
     $col->addDate('date')->setValue(Format::date($date))->setClass('shortWidth');

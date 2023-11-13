@@ -1,5 +1,9 @@
 CHANGELOG
 =========
+v1.1.01
+-------
+Improved the planner view and announcement page
+
 v1.1.00
 -------
 Added a student and staff Planner dashboard and student log entires

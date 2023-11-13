@@ -72,7 +72,7 @@ class DailyPlannerGateway extends QueryableGateway
 
     public function selectENFStudentsByTeacher($gibbonSchoolYearID, $gibbonPersonIDTeacher)
     {
-        $data = ['gibbonSchoolYearID' => $gibbonSchoolYearID, 'gibbonPersonIDTeacher' => $gibbonPersonIDTeacher];
+        $data = ['gibbonSchoolYearID' => $gibbonSchoolYearID, 'gibbonPersonIDTeacher' => $gibbonPersonIDTeacher, 'today' => date('Y-m-d')];
         $sql = "SELECT DISTINCT student.gibbonPersonID, student.surname, student.preferredName, student.email, student.image_240
                 FROM gibbonCourseClassPerson AS teacherClass
                 JOIN gibbonCourseClass ON (gibbonCourseClass.gibbonCourseClassID=teacherClass.gibbonCourseClassID)
@@ -86,6 +86,9 @@ class DailyPlannerGateway extends QueryableGateway
                 AND teacherClass.gibbonPersonID=:gibbonPersonIDTeacher
                 AND studentClass.role='Student'
                 AND gibbonCourse.gibbonSchoolYearID=:gibbonSchoolYearID 
+                AND student.status = 'Full'
+                AND (student.dateStart IS NULL OR student.dateStart <= :today)
+                AND (student.dateEnd IS NULL OR student.dateEnd >= :today)
                 GROUP BY student.gibbonPersonID
                 ORDER BY student.surname, student.preferredName, student.email";
 
@@ -94,7 +97,7 @@ class DailyPlannerGateway extends QueryableGateway
 
     public function selectENFStudentsByClass($gibbonSchoolYearID, $gibbonCourseClassID)
     {
-        $data = ['gibbonSchoolYearID' => $gibbonSchoolYearID, 'gibbonCourseClassID' => $gibbonCourseClassID];
+        $data = ['gibbonSchoolYearID' => $gibbonSchoolYearID, 'gibbonCourseClassID' => $gibbonCourseClassID, 'today' => date('Y-m-d')];
         $sql = "SELECT DISTINCT student.gibbonPersonID, student.surname, student.preferredName, student.email, student.image_240
                 FROM gibbonCourseClass
                 JOIN gibbonCourse ON (gibbonCourse.gibbonCourseID=gibbonCourseClass.gibbonCourseID)
@@ -104,6 +107,9 @@ class DailyPlannerGateway extends QueryableGateway
                 AND gibbonCourse.gibbonSchoolYearID=:gibbonSchoolYearID 
                 AND gibbonCourseClass.gibbonCourseClassID=:gibbonCourseClassID
                 AND gibbonCourseClassPerson.role='Student'
+                AND student.status = 'Full'
+                AND (student.dateStart IS NULL OR student.dateStart <= :today)
+                AND (student.dateEnd IS NULL OR student.dateEnd >= :today)
                 GROUP BY student.gibbonPersonID
                 ORDER BY student.surname, student.preferredName, student.email";
 
@@ -145,9 +151,9 @@ class DailyPlannerGateway extends QueryableGateway
         return $this->db()->select($sql, $data);
     }
 
-    public function getENFClassByStudent($gibbonSchoolYearID, $gibbonPersonIDStudent)
+    public function getENFClassByPerson($gibbonSchoolYearID, $gibbonPersonIDStudent)
     {
-        $data = ['gibbonSchoolYearID' => $gibbonSchoolYearID, 'gibbonPersonIDStudent' => $gibbonPersonIDStudent];
+        $data = ['gibbonSchoolYearID' => $gibbonSchoolYearID, 'gibbonPersonIDStudent' => $gibbonPersonIDStudent, 'today' => date('Y-m-d')];
         $sql = "SELECT DISTINCT gibbonCourseClassPerson.*, gibbonCourseClass.name as 'className', gibbonCourseClass.nameShort as 'classNameShort', gibbonCourse.nameShort as 'courseNameShort', gibbonCourse.name as 'courseName', gibbonPerson.gibbonPersonID, gibbonPerson.surname, gibbonPerson.preferredName, gibbonPerson.email, gibbonPerson.image_240
                 FROM gibbonCourseClassPerson
                 JOIN gibbonCourseClass ON (gibbonCourseClass.gibbonCourseClassID=gibbonCourseClassPerson.gibbonCourseClassID)
@@ -155,8 +161,11 @@ class DailyPlannerGateway extends QueryableGateway
                 JOIN gibbonPerson ON (gibbonCourseClassPerson.gibbonPersonID=gibbonPerson.gibbonPersonID)
                 WHERE gibbonCourse.nameShort LIKE 'ENF%'
                 AND gibbonCourseClassPerson.gibbonPersonID=:gibbonPersonIDStudent
-                AND gibbonCourseClassPerson.role='Student'
                 AND gibbonCourse.gibbonSchoolYearID=:gibbonSchoolYearID 
+                AND gibbonCourseClassPerson.role NOT LIKE '%Left'
+                AND gibbonPerson.status = 'Full'
+                AND (gibbonPerson.dateStart IS NULL OR gibbonPerson.dateStart <= :today)
+                AND (gibbonPerson.dateEnd IS NULL OR gibbonPerson.dateEnd >= :today)
                 GROUP BY gibbonPerson.gibbonPersonID
                 ORDER BY gibbonCourse.nameShort";
 

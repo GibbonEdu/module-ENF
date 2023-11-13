@@ -25,3 +25,8 @@ INSERT INTO `gibbonSetting` (`scope`, `name`, `nameDisplay`, `description`, `val
 CREATE TABLE `enfPlannerTask` ( `enfPlannerTaskID` INT(12) UNSIGNED ZEROFILL NOT NULL AUTO_INCREMENT , `enfPlannerEntryID` INT(12) UNSIGNED ZEROFILL NULL , `category` VARCHAR(60) NOT NULL , `minutes` INT(3) NOT NULL , `description` VARCHAR(120) NOT NULL , `sequenceNumber` INT(3) NOT NULL , `timestamp` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP , PRIMARY KEY (`enfPlannerTaskID`)) ENGINE = InnoDB;end
 
 ";
+
+//v1.1.01
+$sql[$count][0] = '1.1.01';
+$sql[$count][1] = "
+";

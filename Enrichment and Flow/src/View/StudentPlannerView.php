@@ -29,6 +29,7 @@ use Gibbon\Forms\Form;
 use Gibbon\Http\Url;
 use Gibbon\Module\EnrichmentandFlow\Domain\JourneyGateway;
 use Gibbon\Domain\System\SettingGateway;
+use Gibbon\Contracts\Database\Connection;
 
 /**
  * StudentPlannerView
@@ -43,13 +44,15 @@ class StudentPlannerView
 
     protected $session;
     protected $settingGateway;
+    protected $connection;
     protected $dailyPlannerGateway;
     protected $journeyGateway;
     protected $date;
 
-    public function __construct(Session $session, SettingGateway $settingGateway, DailyPlannerGateway $dailyPlannerGateway, JourneyGateway $journeyGateway)
+    public function __construct(Session $session, Connection $connection, SettingGateway $settingGateway, DailyPlannerGateway $dailyPlannerGateway, JourneyGateway $journeyGateway)
     {
         $this->session = $session;
+        $this->connection = $connection;
         $this->settingGateway = $settingGateway;
         $this->dailyPlannerGateway = $dailyPlannerGateway;
         $this->journeyGateway = $journeyGateway;
@@ -67,8 +70,9 @@ class StudentPlannerView
         $gibbonSchoolYearID = $this->session->get('gibbonSchoolYearID');
         $gibbonPersonID = $this->session->get('gibbonPersonID');
         $guid = $this->session->get('guid');
+        $connection2 = $this->connection->getConnection();
 
-        $class = $this->dailyPlannerGateway->getENFClassByStudent($gibbonSchoolYearID, $gibbonPersonID);
+        $class = $this->dailyPlannerGateway->getENFClassByPerson($gibbonSchoolYearID, $gibbonPersonID);
         $teachers = $this->dailyPlannerGateway->selectENFTeachersByStudent($gibbonSchoolYearID, $gibbonPersonID)->fetchAll();
 
         $categoryList = $this->settingGateway->getSettingByScope('Enrichment and Flow', 'taskCategories');
@@ -105,6 +109,20 @@ class StudentPlannerView
         $form->addHiddenValue('address', $this->session->get('address'));
         $form->addHiddenValue('enfPlannerEntryID', $plannerEntry['enfPlannerEntryID'] ?? '');
         $form->addHiddenValue('date', $this->date);
+
+        if (isActionAccessible($guid, $connection2, '/modules/Timetable/report_viewAvailableSpaces.php')) {
+            $form->addHeaderAction('timetable', __('View Available Facilities'))
+                ->setURL('/modules/Timetable/report_viewAvailableSpaces.php')
+                ->addParam('spaceType', 'Classroom')
+                ->setIcon('markbook')
+                ->displayLabel()
+                ->append('&nbsp; | &nbsp;');
+        }
+        $form->addHeaderAction('view', __m('View My Planner'))
+            ->setURL('/modules/Enrichment and Flow/planner_view.php')
+            ->displayLabel();
+
+        
 
         if (!empty($taskCode)) {
             $form->addRow()->addContent('<a href="'.$url.'" class="block mb-4">'.$taskCode.'</a>');

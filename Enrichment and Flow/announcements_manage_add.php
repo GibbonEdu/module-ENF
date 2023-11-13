@@ -47,8 +47,8 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/announ
 
     $row = $form->addRow();
         $column = $row->addColumn();
-        $column->addLabel('content', __('Content'));
-        $column->addEditor('content', $guid)->setRows(15)->showMedia()->required();
+        $column->addLabel('contentBlock', __('Content'));
+        $column->addEditor('content', $guid)->setRows(15)->showMedia()->required()->setID('contentBlock');
         
     $row = $form->addRow();
         $row->addFooter();

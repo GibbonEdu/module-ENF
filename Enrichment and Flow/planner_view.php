@@ -51,7 +51,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/planne
         return;
     }
 
-    $class = $dailyPlannerGateway->getENFClassByStudent($gibbonSchoolYearID, $gibbonPersonID);
+    $class = $dailyPlannerGateway->getENFClassByPerson($gibbonSchoolYearID, $gibbonPersonID);
     $teachers = $dailyPlannerGateway->selectENFTeachersByStudent($gibbonSchoolYearID, $gibbonPersonID)->fetchAll();
 
     $categories = $container->get(SettingGateway::class)->getSettingByScope('Enrichment and Flow', 'taskCategories');

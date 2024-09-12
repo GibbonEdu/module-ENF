@@ -9,6 +9,7 @@ $sql[$count][0] = '1.0.00';
 $sql[$count][1] = '-- First version, nothing to update. Based on Gibbon\'s Mastery Transcipt module, v1.4.07';
 
 //v1.1.00
+++$count;
 $sql[$count][0] = '1.1.00';
 $sql[$count][1] = "
 UPDATE `gibbonModule` SET entryURL='planner.php' WHERE name='Enrichment and Flow';end
@@ -23,10 +24,17 @@ INSERT INTO `gibbonAction` (`gibbonActionID`, `gibbonModuleID`, `name`, `precede
 INSERT INTO `gibbonPermission` (`permissionID` ,`gibbonRoleID` ,`gibbonActionID`) VALUES (NULL , '1', (SELECT gibbonActionID FROM gibbonAction JOIN gibbonModule ON (gibbonAction.gibbonModuleID=gibbonModule.gibbonModuleID) WHERE gibbonModule.name='Enrichment and Flow' AND gibbonAction.name='Manage Announcements'));end
 INSERT INTO `gibbonSetting` (`scope`, `name`, `nameDisplay`, `description`, `value`) VALUES ('Enrichment and Flow', 'taskCategories', 'Planner Task Categories', 'Available category names and colours used for selecting and displaying planner tasks.', '[{\"category\":\"Homework\",\"0\":\"#fdba74\",\"color\":\"#fdba74\"},{\"category\":\"Studying\",\"0\":\"#5eead4\",\"color\":\"#5eead4\"},{\"category\":\"Sports\",\"0\":\"#7dd3fc\",\"color\":\"#7dd3fc\"},{\"category\":\"Exercise\",\"0\":\"#a5b4fc\",\"color\":\"#a5b4fc\"},{\"category\":\"Games\",\"0\":\"#f9a8d4\",\"color\":\"#f9a8d4\"},{\"category\":\"Music\",\"0\":\"#ffa1b5\",\"color\":\"#ffa1b5\"},{\"category\":\"Reading\",\"0\":\"#c4b5fd\",\"color\":\"#c4b5fd\"},{\"category\":\"Personal Project\",\"0\":\"#d8b4fe\",\"color\":\"#d8b4fe\"},{\"category\":\"Other\",\"0\":\"#d1d5db\",\"color\":\"#d1d5db\"}]');end
 CREATE TABLE `enfPlannerTask` ( `enfPlannerTaskID` INT(12) UNSIGNED ZEROFILL NOT NULL AUTO_INCREMENT , `enfPlannerEntryID` INT(12) UNSIGNED ZEROFILL NULL , `category` VARCHAR(60) NOT NULL , `minutes` INT(3) NOT NULL , `description` VARCHAR(120) NOT NULL , `sequenceNumber` INT(3) NOT NULL , `timestamp` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP , PRIMARY KEY (`enfPlannerTaskID`)) ENGINE = InnoDB;end
-
 ";
 
 //v1.1.01
+++$count;
 $sql[$count][0] = '1.1.01';
 $sql[$count][1] = "
+";
+
+//v1.2.00
+++$count;
+$sql[$count][0] = '1.2.00';
+$sql[$count][1] = "
+UPDATE gibbonModule SET author='Gibbon Foundation', url='https://gibbonedu.org' WHERE name='Enrichment and Flow';end
 ";

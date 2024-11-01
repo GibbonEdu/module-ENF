@@ -27,7 +27,7 @@ $description = 'This module allows schools to implement ICHK\'s Enrichment and F
 $entryURL = 'planner.php';
 $type = 'Additional';
 $category = 'Learn';
-$version = '1.2.01';
+$version = '1.2.02';
 $author = "Gibbon Foundation";
 $url = "https://gibbonedu.org";
 

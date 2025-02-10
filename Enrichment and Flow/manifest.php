@@ -27,7 +27,7 @@ $description = 'This module allows schools to implement ICHK\'s Enrichment and F
 $entryURL = 'planner.php';
 $type = 'Additional';
 $category = 'Learn';
-$version = '1.2.02';
+$version = '1.3.00';
 $author = "Gibbon Foundation";
 $url = "https://gibbonedu.org";
 
@@ -43,7 +43,7 @@ $moduleTables[] = "CREATE TABLE `enfDomain` (
   `logo` varchar(255) NOT NULL DEFAULT '',
   `creditLicensing` text NOT NULL,
   PRIMARY KEY (`enfDomainID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;";
 
 $moduleTables[] = "CREATE TABLE `enfCredit` (
   `enfCreditID` int(4) unsigned zerofill NOT NULL AUTO_INCREMENT,
@@ -55,14 +55,14 @@ $moduleTables[] = "CREATE TABLE `enfCredit` (
   `logo` varchar(255) NOT NULL DEFAULT '',
   `creditLicensing` text NOT NULL,
   PRIMARY KEY (`enfCreditID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;";
 
 $moduleTables[] = "CREATE TABLE `enfCreditMentor` (
   `enfCreditMentorID` int(6) unsigned zerofill NOT NULL AUTO_INCREMENT,
   `enfCreditID` int(4) unsigned zerofill NOT NULL,
   `gibbonPersonID` int(10) unsigned zerofill NOT NULL,
   PRIMARY KEY (`enfCreditMentorID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;";
 
 $moduleTables[] = "CREATE TABLE `enfOpportunity` (
   `enfOpportunityID` int(4) unsigned zerofill NOT NULL AUTO_INCREMENT,
@@ -74,21 +74,21 @@ $moduleTables[] = "CREATE TABLE `enfOpportunity` (
   `gibbonYearGroupIDList` varchar(255) NOT NULL DEFAULT '',
   `creditLicensing` text NOT NULL,
   PRIMARY KEY (`enfOpportunityID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;";
 
 $moduleTables[] = "CREATE TABLE `enfOpportunityMentor` (
   `enfOpportunityMentorID` int(6) unsigned zerofill NOT NULL AUTO_INCREMENT,
   `enfOpportunityID` int(4) unsigned zerofill NOT NULL,
   `gibbonPersonID` int(10) unsigned zerofill NOT NULL,
   PRIMARY KEY (`enfOpportunityMentorID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;";
 
 $moduleTables[] = "CREATE TABLE `enfOpportunityCredit` (
   `enfOpportunityCreditID` int(6) unsigned zerofill NOT NULL AUTO_INCREMENT,
   `enfOpportunityID` int(4) unsigned zerofill NOT NULL,
   `enfCreditID` int(4) unsigned zerofill NOT NULL,
   PRIMARY KEY (`enfOpportunityCreditID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;";
 
 $moduleTables[] = "CREATE TABLE `enfJourney` (
 `enfJourneyID` int(12) unsigned zerofill NOT NULL AUTO_INCREMENT,
@@ -109,7 +109,7 @@ $moduleTables[] = "CREATE TABLE `enfJourney` (
   PRIMARY KEY (`enfJourneyID`),
   INDEX(`gibbonPersonIDStudent`),
   INDEX(`status`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;";
 
 $moduleTables[] = "CREATE TABLE `enfPlannerEntry` ( 
     `enfPlannerEntryID` INT(12) UNSIGNED ZEROFILL NOT NULL AUTO_INCREMENT , 

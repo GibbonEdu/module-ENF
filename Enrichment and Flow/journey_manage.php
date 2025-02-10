@@ -43,7 +43,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/journe
 
     $form = Form::create('search', $session->get('absoluteURL').'/index.php', 'get');
     $form->setTitle(__('Filter'));
-    $form->setClass('noIntBorder fullWidth');
+    $form->setClass('noIntBorder w-full');
     $form->setFactory(DatabaseFormFactory::create($pdo));
 
     $form->addHiddenValue('q', '/modules/'.$session->get('module').'/journey_manage.php');
@@ -85,6 +85,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/journe
         ->searchBy($journeyGateway->getSearchableColumns(), $search)
         ->filterBy('student', $gibbonPersonIDStudent)
         ->filterBy('status', $status)
+        ->sortBy('isMentor', 'DESC')
         ->sortBy('timestampJoined', 'DESC')
         ->fromPOST();
 

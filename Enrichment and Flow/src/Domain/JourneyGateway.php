@@ -76,24 +76,25 @@ class JourneyGateway extends QueryableGateway
         if ($highestAction == 'Manage Journey_all') {
             $query = $this
                 ->newQuery()
-                ->cols(['enfJourney.*', '\'Credit\' AS type', 'enfCredit.name AS name', 'logo', 'student.surname', 'student.preferredName', 'mentor.surname AS mentorsurname', 'mentor.preferredName AS mentorpreferredName'])
+                ->cols(['enfJourney.*', '\'Credit\' AS type', 'enfCredit.name AS name', 'logo', 'student.surname', 'student.preferredName', 'mentor.surname AS mentorsurname', 'mentor.preferredName AS mentorpreferredName', '(CASE WHEN enfJourney.gibbonPersonIDSchoolMentor=:gibbonPersonID THEN 1 ELSE 0 END) as isMentor'])
                 ->from($this->getTableName())
                 ->innerJoin('gibbonPerson AS student', 'enfJourney.gibbonPersonIDStudent=student.gibbonPersonID')
                 ->innerJoin('enfCredit','enfJourney.enfCreditID=enfCredit.enfCreditID AND type=\'Credit\'')
                 ->innerJoin('gibbonPerson AS mentor', 'enfJourney.gibbonPersonIDSchoolMentor=mentor.gibbonPersonID');
 
             $this->unionAllWithCriteria($query, $criteria)
-                ->cols(['enfJourney.*', '\'Opportunity\' AS type', 'enfOpportunity.name AS name', 'logo', 'student.surname', 'student.preferredName', 'mentor.surname AS mentorsurname', 'mentor.preferredName AS mentorpreferredName'])
+                ->cols(['enfJourney.*', '\'Opportunity\' AS type', 'enfOpportunity.name AS name', 'logo', 'student.surname', 'student.preferredName', 'mentor.surname AS mentorsurname', 'mentor.preferredName AS mentorpreferredName', '(CASE WHEN enfJourney.gibbonPersonIDSchoolMentor=:gibbonPersonID THEN 1 ELSE 0 END) as isMentor'])
                 ->from($this->getTableName())
                 ->innerJoin('gibbonPerson AS student', 'enfJourney.gibbonPersonIDStudent=student.gibbonPersonID')
                 ->innerJoin('enfOpportunity','enfJourney.enfOpportunityID=enfOpportunity.enfOpportunityID AND type=\'Opportunity\'')
-                ->innerJoin('gibbonPerson AS mentor', 'enfJourney.gibbonPersonIDSchoolMentor=mentor.gibbonPersonID');
+                ->innerJoin('gibbonPerson AS mentor', 'enfJourney.gibbonPersonIDSchoolMentor=mentor.gibbonPersonID')
+                ->bindValue('gibbonPersonID', $gibbonPersonID);
 
         }
         else {
             $query = $this
                 ->newQuery()
-                ->cols(['enfJourney.*', '\'Credit\' AS type', 'enfCredit.name AS name', 'logo', 'surname', 'preferredName'])
+                ->cols(['enfJourney.*', '\'Credit\' AS type', 'enfCredit.name AS name', 'logo', 'surname', 'preferredName', '1 as isMentor'])
                 ->from($this->getTableName())
                 ->innerJoin('gibbonPerson', 'enfJourney.gibbonPersonIDStudent=gibbonPerson.gibbonPersonID')
                 ->innerJoin('enfCredit','enfJourney.enfCreditID=enfCredit.enfCreditID AND type=\'Credit\'')
@@ -101,7 +102,7 @@ class JourneyGateway extends QueryableGateway
                 ->bindValue('gibbonPersonID', $gibbonPersonID);
 
             $this->unionAllWithCriteria($query, $criteria)
-                ->cols(['enfJourney.*', '\'Opportunity\' AS type', 'enfOpportunity.name AS name', 'logo', 'surname', 'preferredName'])
+                ->cols(['enfJourney.*', '\'Opportunity\' AS type', 'enfOpportunity.name AS name', 'logo', 'surname', 'preferredName', '1 as isMentor'])
                 ->from($this->getTableName())
                 ->innerJoin('gibbonPerson', 'enfJourney.gibbonPersonIDStudent=gibbonPerson.gibbonPersonID')
                 ->innerJoin('enfOpportunity','enfJourney.enfOpportunityID=enfOpportunity.enfOpportunityID AND type=\'Opportunity\'')

@@ -50,6 +50,10 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/settin
             // Handle categories
             if ($name == 'taskCategories') {
                 $value = array_combine(array_keys($_POST['order'] ?? []), array_values($value));
+                $value = array_map(function ($item) {
+                    $item['color'] = !empty($item['color']) ? preg_replace('/[^a-fA-F0-9\#]/', '', mb_substr($item['color'], 0, 7)) : '';
+                    return $item;
+                }, $value);
                 ksort($value);
                 $value = json_encode($value);
             }

@@ -27,7 +27,7 @@ use Gibbon\Module\EnrichmentandFlow\Domain\CreditMentorGateway;
 
 require_once '../../gibbon.php';
 
-$_POST = $container->get(Validator::class)->sanitize($_POST);
+$_POST = $container->get(Validator::class)->sanitize($_POST, ['description' => 'HTML', 'outcomes' => 'HTML']);
 
 $enfDomainID = $_GET['enfDomainID'] ?? '';
 $search = $_GET['search'] ?? '';

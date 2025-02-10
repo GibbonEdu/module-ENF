@@ -28,7 +28,7 @@ use Gibbon\Module\EnrichmentandFlow\Domain\OpportunityCreditGateway;
 
 require_once '../../gibbon.php';
 
-$_POST = $container->get(Validator::class)->sanitize($_POST);
+$_POST = $container->get(Validator::class)->sanitize($_POST, ['description' => 'HTML', 'outcomes' => 'HTML']);
 
 $enfOpportunityID = $_POST['enfOpportunityID'] ?? '';
 $search = $_GET['search'] ?? '';

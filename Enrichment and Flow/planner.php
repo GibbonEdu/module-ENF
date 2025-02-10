@@ -46,7 +46,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/planne
     $form->setClass('blank w-full');
     $form->addHiddenValue('q', $session->get('address'));
 
-    $row = $form->addRow()->addClass('flex flex-wrap');
+    $row = $form->addRow()->addClass('flex flex-wrap mb-4');
     if (!empty($announcement)) {
         $row->addContent('<h3>'.__m('Announcements').'</h3>');
     }
@@ -58,6 +58,10 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/planne
         $class = $dailyPlannerGateway->getENFClassByPerson($session->get('gibbonSchoolYearID'), $session->get('gibbonPersonID'));
         $classes = $dailyPlannerGateway->selectAllENFClasses($session->get('gibbonSchoolYearID'))->fetchKeyPair();
         $col->addSelect('gibbonCourseClassID')->fromArray($classes)->setClass('shortWidth mr-1')->selected($gibbonCourseClassID ?? $class['gibbonCourseClassID'] ?? '')->placeholder('[ '.__m('Select a Class').' ]');
+
+        if (empty($gibbonCourseClassID)) {
+            $gibbonCourseClassID = $class['gibbonCourseClassID'] ?? '';
+        }
     }
 
     $col->addDate('date')->setValue(Format::date($date))->setClass('shortWidth');

@@ -139,7 +139,7 @@ class StudentPlannerView
             $row = $blockTemplate->addRow();
                 $row->addSelect('category')->fromArray($categories)->setClass('w-48 mr-2')->required()->placeholder();
                 $row->addNumber('minutes')->setClass('w-24 mr-2')->onlyInteger(true)->required()->placeholder(__m('Mins'));
-                $row->addTextField('description')->maxLength(120)->setClass('w-full')->required()->placeholder(__('Description'))
+                $row->addTextField('description')->maxLength(120)->setClass('flex-1')->required()->placeholder(__('Description'))
                     ->append('<input type="hidden" id="enfPlannerTaskID" name="enfPlannerTaskID" value="">');
 
             // Custom Blocks

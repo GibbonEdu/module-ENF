@@ -19,28 +19,28 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-use Gibbon\Data\Validator;
-use Gibbon\Module\EnrichmentandFlow\Domain\DomainGateway;
+use Gibbon\Forms\Prefab\DeleteForm;
+use Gibbon\Module\EnrichmentandFlow\Domain\BlockGateway;
 
-require_once '../../gibbon.php';
-
-$_POST = $container->get(Validator::class)->sanitize($_POST);
-
-if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/domains_manage.php') == false) {
-    exit;
+if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/blocks_manage_delete.php') == false) {
+    // Access denied
+    $page->addError(__('You do not have access to this action.'));
 } else {
     // Proceed!
-    $order = $_POST['order'] ?? [];
+    $enfBlockID = $_GET['enfBlockID'] ?? '';
 
-    if (empty($order)) {
-        exit;
-    } else {
-        $domainGateway = $container->get(domainGateway::class);
-
-        $count = 1;
-        foreach ($order as $enfDomainID) {
-            $updated = $domainGateway->update($enfDomainID, ['sequenceNumber' => $count]);
-            $count++;
-        }
+    if (empty($enfBlockID)) {
+        $page->addError(__('You have not specified one or more required parameters.'));
+        return;
     }
+
+    $values = $container->get(BlockGateway::class)->getByID($enfBlockID);
+
+    if (empty($values)) {
+        $page->addError(__('The specified record cannot be found.'));
+        return;
+    }
+
+    $form = DeleteForm::createForm($session->get('absoluteURL').'/modules/Enrichment and Flow/blocks_manage_deleteProcess.php');
+    echo $form->getOutput();
 }

@@ -20,27 +20,40 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
 use Gibbon\Data\Validator;
-use Gibbon\Module\EnrichmentandFlow\Domain\DomainGateway;
+use Gibbon\Module\EnrichmentandFlow\Domain\SessionGateway;
 
 require_once '../../gibbon.php';
 
 $_POST = $container->get(Validator::class)->sanitize($_POST);
 
-if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/domains_manage.php') == false) {
+$enfSessionID = $_POST['enfSessionID'] ?? '';
+
+$URL = $session->get('absoluteURL').'/index.php?q=/modules/Enrichment and Flow/sessions_manage.php';
+
+if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/sessions_manage_delete.php') == false) {
+    $URL .= '&return=error0';
+    header("Location: {$URL}");
+    exit;
+} elseif (empty($enfSessionID)) {
+    $URL .= '&return=error1';
+    header("Location: {$URL}");
     exit;
 } else {
     // Proceed!
-    $order = $_POST['order'] ?? [];
+    $sessionGateway = $container->get(SessionGateway::class);
+    $values = $sessionGateway->getByID($enfSessionID);
 
-    if (empty($order)) {
+    if (empty($values)) {
+        $URL .= '&return=error2';
+        header("Location: {$URL}");
         exit;
-    } else {
-        $domainGateway = $container->get(domainGateway::class);
-
-        $count = 1;
-        foreach ($order as $enfDomainID) {
-            $updated = $domainGateway->update($enfDomainID, ['sequenceNumber' => $count]);
-            $count++;
-        }
     }
+
+    $deleted = $sessionGateway->delete($enfSessionID);
+
+    $URL .= !$deleted
+        ? '&return=error2'
+        : '&return=success0';
+
+    header("Location: {$URL}");
 }

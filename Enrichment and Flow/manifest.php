@@ -27,7 +27,7 @@ $description = 'This module allows schools to implement ICHK\'s Enrichment and F
 $entryURL = 'planner.php';
 $type = 'Additional';
 $category = 'Learn';
-$version = '1.3.00';
+$version = '1.4.00';
 $author = "Gibbon Foundation";
 $url = "https://gibbonedu.org";
 
@@ -117,7 +117,7 @@ $moduleTables[] = "CREATE TABLE `enfPlannerEntry` (
     `date` DATE NOT NULL , `tasks` TEXT NULL , 
     PRIMARY KEY (`enfPlannerEntryID`), 
     UNIQUE KEY `entry` (`gibbonPersonID`, `date`)
-) ENGINE = InnoDB;";
+) ENGINE = InnoDB DEFAULT CHARSET=utf8mb3;";
 
 $moduleTables[] = "CREATE TABLE `enfAnnouncement` ( 
     `enfAnnouncementID` INT(8) UNSIGNED ZEROFILL NOT NULL AUTO_INCREMENT , 
@@ -125,7 +125,7 @@ $moduleTables[] = "CREATE TABLE `enfAnnouncement` (
     `gibbonPersonIDCreated` INT(10) UNSIGNED ZEROFILL NULL , 
     `gibbonPersonIDModified` INT(10) UNSIGNED ZEROFILL NULL , 
     PRIMARY KEY (`enfAnnouncementID`), UNIQUE KEY `date` (`date`)
-) ENGINE = InnoDB;";
+) ENGINE = InnoDB DEFAULT CHARSET=utf8mb3;";
 
 $moduleTables[] = "CREATE TABLE `enfPlannerTask` ( 
     `enfPlannerTaskID` INT(12) UNSIGNED ZEROFILL NOT NULL AUTO_INCREMENT , 
@@ -136,7 +136,83 @@ $moduleTables[] = "CREATE TABLE `enfPlannerTask` (
     `sequenceNumber` INT(3) NOT NULL , 
     `timestamp` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP , 
     PRIMARY KEY (`enfPlannerTaskID`)
-) ENGINE = InnoDB;";
+) ENGINE = InnoDB DEFAULT CHARSET=utf8mb3;";
+
+
+$moduleTables[] = "CREATE TABLE `enfBlock` ( 
+    `enfBlockID` INT UNSIGNED NOT NULL AUTO_INCREMENT , 
+    `name` VARCHAR(60) NOT NULL,
+    `gibbonDaysOfWeekID` INT UNSIGNED NOT NULL,
+    `timeStart` TIME NOT NULL,
+    `timeEnd` TIME NOT NULL,
+    `signUpSameDay` ENUM('Y','N') NOT NULL DEFAULT 'Y',
+    `signUpStart` TIME NULL,
+    PRIMARY KEY (`enfBlockID`)
+) ENGINE = InnoDB DEFAULT CHARSET=utf8mb3;";
+
+$moduleTables[] = "CREATE TABLE `enfBlockFacility` ( 
+    `enfBlockFacilityID` INT UNSIGNED NOT NULL AUTO_INCREMENT , 
+    `gibbonSpaceID` INT UNSIGNED NOT NULL,
+    PRIMARY KEY (`enfBlockFacilityID`)
+) ENGINE = InnoDB DEFAULT CHARSET=utf8mb3;";
+
+$moduleTables[] = "CREATE TABLE `enfBlockDate` ( 
+    `enfBlockDateID` INT UNSIGNED NOT NULL AUTO_INCREMENT , 
+    `enfBlockID` INT UNSIGNED NOT NULL,
+    `date` DATE NOT NULL,
+    PRIMARY KEY (`enfBlockDateID`)
+) ENGINE = InnoDB DEFAULT CHARSET=utf8mb3;";
+
+$moduleTables[] = "CREATE TABLE `enfPlannedSession` ( 
+    `enfPlannedSessionID` INT UNSIGNED NOT NULL AUTO_INCREMENT , 
+    `enfBlockID` INT UNSIGNED NOT NULL,
+    `enfSessionID` INT UNSIGNED NOT NULL,
+    `enfBlockFacilityID` INT UNSIGNED NOT NULL,
+    `gibbonPersonIDCreated` INT NOT NULL,
+    `timestampCreated` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ,
+    PRIMARY KEY (`enfPlannedSessionID`)
+) ENGINE = InnoDB DEFAULT CHARSET=utf8mb3;";
+
+$moduleTables[] = "CREATE TABLE `enfPlannedSessionTeacher` ( 
+    `enfPlannedSessionTeacherID` INT UNSIGNED NOT NULL AUTO_INCREMENT , 
+    `enfPlannedSessionID` INT UNSIGNED NOT NULL,
+    `gibbonPersonID` INT UNSIGNED NOT NULL,
+    `timestampCreated` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ,
+    PRIMARY KEY (`enfPlannedSessionTeacherID`)
+) ENGINE = InnoDB DEFAULT CHARSET=utf8mb3;";
+
+$moduleTables[] = "CREATE TABLE `enfSession` ( 
+    `enfSessionID` INT UNSIGNED NOT NULL AUTO_INCREMENT , 
+    `type` VARCHAR(120) NOT NULL,
+    `focus` VARCHAR(120) NOT NULL,
+    `description` TEXT NULL,
+    `maxStudents` SMALLINT NULL,
+    `gibbonPersonIDCreated` INT NOT NULL,
+    `gibbonPersonIDModified` INT NOT NULL,
+    `timestampCreated` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP , 
+    `timestampModified` TIMESTAMP NOT NULL, 
+    PRIMARY KEY (`enfSessionID`)
+) ENGINE = InnoDB DEFAULT CHARSET=utf8mb3;";
+
+$moduleTables[] = "CREATE TABLE `enfSessionStudent` ( 
+    `enfSessionStudentID` INT UNSIGNED NOT NULL AUTO_INCREMENT , 
+    `enfPlannedSessionID` INT UNSIGNED NOT NULL,
+    `enfSessionID` INT UNSIGNED NOT NULL,
+    `enfBlockID` INT UNSIGNED NOT NULL,
+    `gibbonPersonID` INT UNSIGNED NOT NULL,
+    `gibbonSpaceID` INT UNSIGNED NOT NULL,
+    `date` DATE NOT NULL,
+    `timeStart` TIME NOT NULL,
+    `timeEnd` TIME NOT NULL,
+    `block` VARCHAR(60) NOT NULL,
+    `type` VARCHAR(120) NOT NULL,
+    `session` VARCHAR(120) NOT NULL,
+    `comment` TEXT NULL,
+    `gibbonPersonIDCreated` INT NOT NULL,
+    `timestampCreated` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ,
+    PRIMARY KEY (`enfSessionStudentID`)
+) ENGINE = InnoDB DEFAULT CHARSET=utf8mb3;";
+
 
 //Settings - none
 $gibbonSetting[] = "INSERT INTO `gibbonSetting` (`scope` ,`name` ,`nameDisplay` ,`description` ,`value`) VALUES ('Enrichment and Flow', 'indexText', 'Index Text', 'Welcome text for users arriving in the module.', '')";
@@ -434,6 +510,86 @@ $actionRows[] = [
     'menuShow'                  => 'Y',
     'defaultPermissionAdmin'    => 'Y',
     'defaultPermissionTeacher'  => 'N',
+    'defaultPermissionStudent'  => 'N',
+    'defaultPermissionParent'   => 'N',
+    'defaultPermissionSupport'  => 'N',
+    'categoryPermissionStaff'   => 'Y',
+    'categoryPermissionStudent' => 'N',
+    'categoryPermissionParent'  => 'N',
+    'categoryPermissionOther'   => 'N',
+];
+
+$actionRows[] = [
+    'name'                      => 'Manage Blocks',
+    'precedence'                => '0',
+    'category'                  => 'Sessions',
+    'description'               => 'Manage blocks for planning sessions',
+    'URLList'                   => 'blocks_manage.php,blocks_manage_addEdit.php,blocks_manage_delete.php',
+    'entryURL'                  => 'blocks_manage.php',
+    'entrySidebar'              => 'Y',
+    'menuShow'                  => 'Y',
+    'defaultPermissionAdmin'    => 'Y',
+    'defaultPermissionTeacher'  => 'N',
+    'defaultPermissionStudent'  => 'N',
+    'defaultPermissionParent'   => 'N',
+    'defaultPermissionSupport'  => 'N',
+    'categoryPermissionStaff'   => 'Y',
+    'categoryPermissionStudent' => 'N',
+    'categoryPermissionParent'  => 'N',
+    'categoryPermissionOther'   => 'N',
+];
+
+$actionRows[] = [
+    'name'                      => 'Manage Sessions',
+    'precedence'                => '0',
+    'category'                  => 'Sessions',
+    'description'               => 'Manage sessions available for student signup',
+    'URLList'                   => 'sessions_manage.php,sessions_manage_addEdit.php,sessions_manage_delete.php',
+    'entryURL'                  => 'sessions_manage.php',
+    'entrySidebar'              => 'Y',
+    'menuShow'                  => 'Y',
+    'defaultPermissionAdmin'    => 'Y',
+    'defaultPermissionTeacher'  => 'N',
+    'defaultPermissionStudent'  => 'N',
+    'defaultPermissionParent'   => 'N',
+    'defaultPermissionSupport'  => 'N',
+    'categoryPermissionStaff'   => 'Y',
+    'categoryPermissionStudent' => 'N',
+    'categoryPermissionParent'  => 'N',
+    'categoryPermissionOther'   => 'N',
+];
+
+$actionRows[] = [
+    'name'                      => 'My Sessions',
+    'precedence'                => '0',
+    'category'                  => 'Flow',
+    'description'               => 'View and plan sessions',
+    'URLList'                   => 'sessions_my.php,sessions_my_add.php,sessions_my_join.php',
+    'entryURL'                  => 'sessions_my.php',
+    'entrySidebar'              => 'Y',
+    'menuShow'                  => 'Y',
+    'defaultPermissionAdmin'    => 'Y',
+    'defaultPermissionTeacher'  => 'Y',
+    'defaultPermissionStudent'  => 'N',
+    'defaultPermissionParent'   => 'N',
+    'defaultPermissionSupport'  => 'N',
+    'categoryPermissionStaff'   => 'Y',
+    'categoryPermissionStudent' => 'N',
+    'categoryPermissionParent'  => 'N',
+    'categoryPermissionOther'   => 'N',
+];
+
+$actionRows[] = [
+    'name'                      => 'All Sessions',
+    'precedence'                => '0',
+    'category'                  => 'Flow',
+    'description'               => 'View all planned sessions',
+    'URLList'                   => 'sessions_view.php',
+    'entryURL'                  => 'sessions_view.php',
+    'entrySidebar'              => 'Y',
+    'menuShow'                  => 'Y',
+    'defaultPermissionAdmin'    => 'Y',
+    'defaultPermissionTeacher'  => 'Y',
     'defaultPermissionStudent'  => 'N',
     'defaultPermissionParent'   => 'N',
     'defaultPermissionSupport'  => 'N',

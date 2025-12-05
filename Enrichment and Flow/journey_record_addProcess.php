@@ -52,7 +52,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/journe
         'enfCreditID'         => $_POST['enfCreditID'] ?? null,
         'gibbonPersonIDSchoolMentor'        => (!empty($_POST['gibbonPersonIDSchoolMentor'])) ? substr($_POST['gibbonPersonIDSchoolMentor'], (strpos($_POST['gibbonPersonIDSchoolMentor'], "-")+1)) : null,
         'status'                            => 'Current - Pending',
-        'statusKey'                         => $confirmationKey = randomPassword(20)
+        'statusKey'                         => bin2hex(random_bytes(16))
     ];
 
     // Validate the required values are present

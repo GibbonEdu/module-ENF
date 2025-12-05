@@ -36,6 +36,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/settin
     $partialFail = false;
     $settingGateway = $container->get(SettingGateway::class);
 
+
     $settingsToUpdate = [
         'Enrichment and Flow' => [
             'indexText',

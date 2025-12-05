@@ -25,38 +25,28 @@ use Gibbon\Domain\Traits\TableAware;
 use Gibbon\Domain\QueryCriteria;
 use Gibbon\Domain\QueryableGateway;
 
-class AnnouncementGateway extends QueryableGateway
+class BlockGateway extends QueryableGateway
 {
     use TableAware;
 
-    private static $tableName = 'enfAnnouncement';
-    private static $primaryKey = 'enfAnnouncementID';
-    private static $searchableColumns = ['date'];
+    private static $tableName = 'enfBlock';
+    private static $primaryKey = 'enfBlockID';
+    private static $searchableColumns = [''];
 
     /**
      * @param QueryCriteria $criteria
      * @return DataSet
      */
-    public function queryAnnouncements(QueryCriteria $criteria)
+    public function queryBlocks(QueryCriteria $criteria)
     {
         $query = $this
             ->newQuery()
-            ->cols(['enfAnnouncement.*', 'gibbonPerson.title', 'gibbonPerson.preferredName', 'gibbonPerson.surname'])
-            ->leftJoin('gibbonPerson', 'gibbonPerson.gibbonPersonID=enfAnnouncement.gibbonPersonIDCreated')
-            ->from($this->getTableName());
+            ->cols(['enfBlock.enfBlockID', 'enfBlock.name','enfBlock.timeStart','enfBlock.timeEnd','enfBlock.signUpSameDay','enfBlock.signUpStart', 'gibbonDaysOfWeek.name as weekday'])
+            ->from($this->getTableName())
+            ->leftJoin('gibbonDaysOfWeek', 'gibbonDaysOfWeek.gibbonDaysOfWeekID=enfBlock.gibbonDaysOfWeekID');
 
         return $this->runQuery($query, $criteria);
     }
 
-    public function getAnnouncementByDate(string $date)
-    {
-        $query = $this
-            ->newQuery()
-            ->cols(['enfAnnouncement.*'])
-            ->from($this->getTableName())
-            ->where('enfAnnouncement.date = :date')
-            ->bindValue('date', $date);
-
-        return $this->runSelect($query)->fetch();
-    }
+    
 }

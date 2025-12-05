@@ -41,7 +41,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/settin
     
     $column = $form->addRow()->addColumn();
         $column->addLabel($setting['name'], __m($setting['nameDisplay']))->description(__m($setting['description']));
-        $column->addEditor($setting['name'], $guid)->required()->setValue($setting['value']);
+        $column->addEditor($setting['name'], $guid)->required()->setValue($setting['value'])->showMedia();
 
     // CATEGORIES
     $setting = $settingGateway->getSettingByScope('Enrichment and Flow', 'taskCategories', true);
@@ -76,22 +76,4 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/settin
 
     echo $form->getOutput();
 }
-?>
-<script>
-    $(document).on('change', '.colorPicker', function () {
-        var target = $(this).next('input.colorField');
-        $(target).val($(this).val());
-    });
 
-    $(document).on('change', '.colorField', function () {
-        var target = $(this).prev('input.colorPicker');
-        $(target).val($(this).val());
-    });
-
-    $('#taskCategories').on('addedBlock', function (event, block) {
-        $('.colorPicker', block).each(function () {
-            var target = $(this).next('input.colorField');
-            $(this).val($(target).val());
-        });
-    });
-</script>

@@ -39,7 +39,21 @@ class BlockFacilityGateway extends QueryableGateway
         $sql = "SELECT enfBlockFacility.enfBlockFacilityID, enfBlockFacility.gibbonSpaceID, gibbonSpace.name as space
                 FROM enfBlockFacility 
                 JOIN gibbonSpace ON (gibbonSpace.gibbonSpaceID=enfBlockFacility.gibbonSpaceID)
-                WHERE enfBlockID=:enfBlockID";
+                WHERE enfBlockFacility.enfBlockID=:enfBlockID";
+
+        return $this->db()->select($sql, $data);
+    }
+
+    public function selectAvailableFacilitiesListByBlock($enfBlockID, $enfPlannedSessionID)
+    {
+        $data = ['enfBlockID' => $enfBlockID, 'enfPlannedSessionID' => $enfPlannedSessionID];
+        $sql = "SELECT enfBlockFacility.enfBlockFacilityID as value, gibbonSpace.name
+                FROM enfBlockFacility 
+                JOIN enfBlock ON (enfBlock.enfBlockID=enfBlockFacility.enfBlockID)
+                JOIN gibbonSpace ON (gibbonSpace.gibbonSpaceID=enfBlockFacility.gibbonSpaceID)
+                LEFT JOIN enfPlannedSession ON (enfPlannedSession.enfBlockID=enfBlockFacility.enfBlockID AND enfPlannedSession.enfBlockFacilityID=enfBlockFacility.enfBlockFacilityID AND NOT enfPlannedSession.enfPlannedSessionID=:enfPlannedSessionID)
+                WHERE enfBlock.enfBlockID=:enfBlockID
+                AND enfPlannedSession.enfPlannedSessionID IS NULL";
 
         return $this->db()->select($sql, $data);
     }

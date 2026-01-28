@@ -27,7 +27,7 @@ $description = 'This module allows schools to implement ICHK\'s Enrichment and F
 $entryURL = 'planner.php';
 $type = 'Additional';
 $category = 'Learn';
-$version = '1.4.00';
+$version = '1.4.01';
 $author = "Gibbon Foundation";
 $url = "https://gibbonedu.org";
 
@@ -141,8 +141,9 @@ $moduleTables[] = "CREATE TABLE `enfPlannerTask` (
 
 $moduleTables[] = "CREATE TABLE `enfBlock` ( 
     `enfBlockID` INT UNSIGNED NOT NULL AUTO_INCREMENT , 
+    `gibbonCourseID` INT UNSIGNED NOT NULL,
     `name` VARCHAR(60) NOT NULL,
-    `gibbonDaysOfWeekID` INT UNSIGNED NOT NULL,
+    `gibbonDaysOfWeekID` INT UNSIGNED ZEROFILL NOT NULL,
     `timeStart` TIME NOT NULL,
     `timeEnd` TIME NOT NULL,
     `signUpSameDay` ENUM('Y','N') NOT NULL DEFAULT 'Y',
@@ -152,6 +153,7 @@ $moduleTables[] = "CREATE TABLE `enfBlock` (
 
 $moduleTables[] = "CREATE TABLE `enfBlockFacility` ( 
     `enfBlockFacilityID` INT UNSIGNED NOT NULL AUTO_INCREMENT , 
+    `enfBlockID` INT UNSIGNED NOT NULL,
     `gibbonSpaceID` INT UNSIGNED NOT NULL,
     PRIMARY KEY (`enfBlockFacilityID`)
 ) ENGINE = InnoDB DEFAULT CHARSET=utf8mb3;";
@@ -167,7 +169,9 @@ $moduleTables[] = "CREATE TABLE `enfPlannedSession` (
     `enfPlannedSessionID` INT UNSIGNED NOT NULL AUTO_INCREMENT , 
     `enfBlockID` INT UNSIGNED NOT NULL,
     `enfSessionID` INT UNSIGNED NOT NULL,
-    `enfBlockFacilityID` INT UNSIGNED NOT NULL,
+    `enfBlockFacilityID` INT UNSIGNED NULL,
+    `gibbonSpaceID` INT UNSIGNED NULL,
+    `notes` TEXT NULL,
     `gibbonPersonIDCreated` INT NOT NULL,
     `timestampCreated` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ,
     PRIMARY KEY (`enfPlannedSessionID`)
@@ -178,7 +182,8 @@ $moduleTables[] = "CREATE TABLE `enfPlannedSessionTeacher` (
     `enfPlannedSessionID` INT UNSIGNED NOT NULL,
     `gibbonPersonID` INT UNSIGNED NOT NULL,
     `timestampCreated` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ,
-    PRIMARY KEY (`enfPlannedSessionTeacherID`)
+    PRIMARY KEY (`enfPlannedSessionTeacherID`),
+    UNIQUE KEY (`enfPlannedSessionID`, `gibbonPersonID`)
 ) ENGINE = InnoDB DEFAULT CHARSET=utf8mb3;";
 
 $moduleTables[] = "CREATE TABLE `enfSession` ( 
@@ -206,11 +211,16 @@ $moduleTables[] = "CREATE TABLE `enfSessionStudent` (
     `timeEnd` TIME NOT NULL,
     `block` VARCHAR(60) NOT NULL,
     `type` VARCHAR(120) NOT NULL,
-    `session` VARCHAR(120) NOT NULL,
+    `focus` VARCHAR(120) NOT NULL,
     `comment` TEXT NULL,
+    `status` VARCHAR(60) NOT NULL DEFAULT 'Present',
+    `locked` ENUM('Y','N') NOT NULL DEFAULT 'Y',
     `gibbonPersonIDCreated` INT NOT NULL,
+    `gibbonPersonIDModified` INT NOT NULL,
     `timestampCreated` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ,
-    PRIMARY KEY (`enfSessionStudentID`)
+    `timestampModified` TIMESTAMP NOT NULL, 
+    PRIMARY KEY (`enfSessionStudentID`),
+    UNIQUE KEY (`enfBlockID`, `gibbonPersonID`, `date`)
 ) ENGINE = InnoDB DEFAULT CHARSET=utf8mb3;";
 
 
@@ -484,7 +494,7 @@ $actionRows[] = [
     'precedence'                => '0',
     'category'                  => 'Flow',
     'description'               => 'An ENF student dashboard view of daily plans and recent activity.',
-    'URLList'                   => 'planner.php,planner_view.php',
+    'URLList'                   => 'planner.php',
     'entryURL'                  => 'planner.php',
     'entrySidebar'              => 'Y',
     'menuShow'                  => 'Y',
@@ -564,7 +574,7 @@ $actionRows[] = [
     'precedence'                => '0',
     'category'                  => 'Flow',
     'description'               => 'View and plan sessions',
-    'URLList'                   => 'sessions_my.php,sessions_my_add.php,sessions_my_join.php',
+    'URLList'                   => 'sessions_my.php,sessions_my_addEdit.php,sessions_my_join.php,sessions_my_delete.php',
     'entryURL'                  => 'sessions_my.php',
     'entrySidebar'              => 'Y',
     'menuShow'                  => 'Y',
@@ -580,7 +590,7 @@ $actionRows[] = [
 ];
 
 $actionRows[] = [
-    'name'                      => 'All Sessions',
+    'name'                      => 'All Sessions_view',
     'precedence'                => '0',
     'category'                  => 'Flow',
     'description'               => 'View all planned sessions',
@@ -595,6 +605,46 @@ $actionRows[] = [
     'defaultPermissionSupport'  => 'N',
     'categoryPermissionStaff'   => 'Y',
     'categoryPermissionStudent' => 'N',
+    'categoryPermissionParent'  => 'N',
+    'categoryPermissionOther'   => 'N',
+];
+
+$actionRows[] = [
+    'name'                      => 'All Sessions_manage',
+    'precedence'                => '1',
+    'category'                  => 'Flow',
+    'description'               => 'View and manage all planned sessions',
+    'URLList'                   => 'sessions_view.php,sessions_view_addEdit.php, sessions_view_addEditStudent.php',
+    'entryURL'                  => 'sessions_view.php',
+    'entrySidebar'              => 'Y',
+    'menuShow'                  => 'Y',
+    'defaultPermissionAdmin'    => 'Y',
+    'defaultPermissionTeacher'  => 'Y',
+    'defaultPermissionStudent'  => 'N',
+    'defaultPermissionParent'   => 'N',
+    'defaultPermissionSupport'  => 'N',
+    'categoryPermissionStaff'   => 'Y',
+    'categoryPermissionStudent' => 'N',
+    'categoryPermissionParent'  => 'N',
+    'categoryPermissionOther'   => 'N',
+];
+
+$actionRows[] = [
+    'name'                      => 'My Planner',
+    'precedence'                => '0',
+    'category'                  => 'Flow',
+    'description'               => 'An overview of ENF plans for a given student.',
+    'URLList'                   => 'planner_view.php',
+    'entryURL'                  => 'planner_view.php',
+    'entrySidebar'              => 'Y',
+    'menuShow'                  => 'Y',
+    'defaultPermissionAdmin'    => 'N',
+    'defaultPermissionTeacher'  => 'N',
+    'defaultPermissionStudent'  => 'Y',
+    'defaultPermissionParent'   => 'N',
+    'defaultPermissionSupport'  => 'N',
+    'categoryPermissionStaff'   => 'N',
+    'categoryPermissionStudent' => 'Y',
     'categoryPermissionParent'  => 'N',
     'categoryPermissionOther'   => 'N',
 ];

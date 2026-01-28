@@ -22,6 +22,8 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 use Gibbon\Services\Format;
 use Gibbon\Module\EnrichmentandFlow\Domain\DailyPlannerGateway;
 use Gibbon\Domain\System\SettingGateway;
+use Gibbon\Module\EnrichmentandFlow\Domain\SessionStudentGateway;
+use Gibbon\Module\EnrichmentandFlow\ENFFormat;
 
 if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/planner_view.php') == false) {
     //Acess denied
@@ -33,9 +35,8 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/planne
         return;
     }
 
-    $page->breadcrumbs->add(__m('Planner Overview'), 'planner.php')->add(__m('View All'));
-
     $dailyPlannerGateway = $container->get(DailyPlannerGateway::class);
+    $sessionStudentGateway = $container->get(SessionStudentGateway::class);
     $gibbonSchoolYearID = $session->get('gibbonSchoolYearID');
 
     // Get current date and role category
@@ -44,8 +45,10 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/planne
 
     if ($highestAction == 'Plan & Log' || $roleCategory == 'Student') {
         $gibbonPersonID = $session->get('gibbonPersonID');
+        $page->breadcrumbs->add(__m('My Planner'));
     } else if ($highestAction == 'Planner Overview') {
         $gibbonPersonID = $_REQUEST['gibbonPersonID'] ?? '';
+        $page->breadcrumbs->add(__m('Planner Overview').' ('.Format::date($date).')')->add(__m('View All'));
     }
 
     if (empty($gibbonPersonID)) {
@@ -69,18 +72,27 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/planne
         $taskCode = '';
 
         if (!empty($plannerEntry['enfPlannerEntryID'])) {
-            $tasks = $dailyPlannerGateway->selectPlannerTasksByEntry($plannerEntry['enfPlannerEntryID'])->fetchAll();
+            $studentSessions = $sessionStudentGateway->selectSessionsByStudentsAndDate($gibbonPersonID, $date)->fetchGroupedUnique();
 
-            if (!empty($tasks)) {
-                $minutes = array_sum(array_column($tasks, 'minutes'));
-                $taskCode = $page->fetchFromTemplate('tasks.twig.html', [
-                    'tasks' => $tasks,
-                    'count' => count($tasks),
-                    'minutes' => max($minutes, 140),
-                    'totalMinutes' => $minutes,
-                    'width' => 'w-64',
-                    'categories' => $categories,
+            if (!empty($studentSessions)) {
+                $taskCode = $page->fetchFromTemplate('sessions.twig.html', [
+                    'sessions' => $studentSessions,
+                    'types'    => ENFFormat::$sessionTypes,
                 ]);
+            } else {
+                $tasks = $dailyPlannerGateway->selectPlannerTasksByEntry($plannerEntry['enfPlannerEntryID'])->fetchAll();
+
+                if (!empty($tasks)) {
+                    $minutes = array_sum(array_column($tasks, 'minutes'));
+                    $taskCode = $page->fetchFromTemplate('tasks.twig.html', [
+                        'tasks' => $tasks,
+                        'count' => count($tasks),
+                        'minutes' => max($minutes, 140),
+                        'totalMinutes' => $minutes,
+                        'width' => 'w-64',
+                        'categories' => $categories,
+                    ]);
+                }
             }
         }
 

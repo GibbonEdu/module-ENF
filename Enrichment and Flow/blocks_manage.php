@@ -47,6 +47,8 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/blocks
         ->setURL('/modules/Enrichment and Flow/blocks_manage_addEdit.php')
         ->displayLabel();
 
+    $table->addColumn('courseNameShort', __('Course'));
+
     $table->addColumn('name', __('Name'));
 
     $table->addColumn('weekday', __('Weekday'));

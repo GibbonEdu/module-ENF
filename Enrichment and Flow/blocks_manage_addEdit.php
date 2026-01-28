@@ -42,14 +42,20 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/blocks
     }
 
     $values = $container->get(BlockGateway::class)->getByID($enfBlockID);
+    $values['gibbonCourseID'] = str_pad(intval($values['gibbonCourseID'] ?? ''), 8, '0', STR_PAD_LEFT);
 
     $form = Form::create('blockAddEdit', Url::fromModuleRoute('Enrichment and Flow', 'blocks_manage_addEditProcess')->directLink());
     $form->setFactory(DatabaseFormFactory::create($pdo));
     
     $form->addHiddenValue('address', $session->get('address'));
     $form->addHiddenValue('enfBlockID', $enfBlockID);
+    $form->addHiddenValue('gibbonSchoolYearID', $values['gibbonSchoolYearID'] ?? $session->get('gibbonSchoolYearID'));
 
     $form->addSection('Basic Details', __('Basic Details'));
+
+    $form->addSelectCourseByYearGroup('gibbonCourseID', $session->get('gibbonSchoolYearID'), '004,005')
+        ->label(__('Course'))
+        ->required();
 
     $form->addTextField('name')
         ->label(__('Name'), __('Must be unique'))

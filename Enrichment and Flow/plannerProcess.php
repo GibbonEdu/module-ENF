@@ -24,6 +24,8 @@ use Gibbon\Services\Format;
 use Gibbon\Domain\System\DiscussionGateway;
 use Gibbon\Module\EnrichmentandFlow\Domain\DailyPlannerGateway;
 use Gibbon\Module\EnrichmentandFlow\Domain\PlannerTaskGateway;
+use Gibbon\Module\EnrichmentandFlow\Domain\PlannedSessionGateway;
+use Gibbon\Module\EnrichmentandFlow\Domain\SessionStudentGateway;
 
 require_once '../../gibbon.php';
 
@@ -40,10 +42,35 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/planne
 } else {
     // Proceed!
     $dailyPlannerGateway = $container->get(DailyPlannerGateway::class);
+    $sessionStudentGateway = $container->get(SessionStudentGateway::class);
     $plannerTasksGateway = $container->get(PlannerTaskGateway::class);
+    $plannedSessionGateway = $container->get(PlannedSessionGateway::class);
     $gibbonPersonID = $session->get('gibbonPersonID');
 
     $enfPlannerEntryID = $_POST['enfPlannerEntryID'] ?? '';
+    $enfPlannedSessionIDs = $_POST['enfPlannedSessionID'] ?? '';
+    $date = $_POST['date'] ?? '';
+
+    // Remove trailing whitespace
+    $comment = trim(preg_replace('/^<p>|<\/p>$/i', '', $_POST['comment'] ?? ''));
+
+    $studentSessions = $sessionStudentGateway->selectSessionsByStudentsAndDate($gibbonPersonID, $date)->fetchGroupedUnique();
+    $canModify = true;
+
+    if (!empty($studentSessions)) {
+        $currentSession = current($studentSessions);
+        $timeRemaining = time() - Format::timestamp($currentSession['timestampCreated']);
+        $canModify = $timeRemaining < 330;
+    }
+
+    if (!$canModify) {
+        $enfPlannedSessionIDs = [];
+    }
+
+    if (($canModify && empty($enfPlannedSessionIDs)) || empty($date)) {
+        header("Location: {$URL}&return=error1");
+        exit;
+    }
 
     if (empty($enfPlannerEntryID)) {
         // Create a new planner entry
@@ -54,15 +81,13 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/planne
 
         // Validate the required values are present
         if (empty($data['date']) || empty($data['gibbonPersonID'])) {
-            $URL .= '&return=error1';
-            header("Location: {$URL}");
+            header("Location: {$URL}&return=error1'");
             exit;
         }
 
         // Validate that this record is unique
         if (!$dailyPlannerGateway->unique($data, ['gibbonPersonID', 'date'])) {
-            $URL .= '&return=error7';
-            header("Location: {$URL}");
+            header("Location: {$URL}&return=error7");
             exit;
         }
 
@@ -81,39 +106,70 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/planne
     }
 
     // Sort and save tasks as a JSON
-    if (!empty($_POST['tasks']) && is_array($_POST['tasks'])) {
-        $tasks = array_map(function ($item) {
-            $item['category'] = strip_tags($item['category']);
-            $item['minutes'] = intval($item['minutes']);
-            $item['description'] = strip_tags($item['description']);
-            return $item;
-        }, $_POST['tasks'] ?? []);
+    // if (!empty($_POST['tasks']) && is_array($_POST['tasks'])) {
+    //     $tasks = array_map(function ($item) {
+    //         $item['category'] = strip_tags($item['category']);
+    //         $item['minutes'] = intval($item['minutes']);
+    //         $item['description'] = strip_tags($item['description']);
+    //         return $item;
+    //     }, $_POST['tasks'] ?? []);
 
-        $tasks = array_combine(array_keys($_POST['order'] ?? []), array_values($tasks));
-        ksort($tasks);
+    //     $tasks = array_combine(array_keys($_POST['order'] ?? []), array_values($tasks));
+    //     ksort($tasks);
 
-        $taskIDs = [];
-        foreach ($tasks as $order => $task) {
-            $task['enfPlannerEntryID'] = $enfPlannerEntryID;
-            $task['sequenceNumber'] = $order;
+    //     $taskIDs = [];
+    //     foreach ($tasks as $order => $task) {
+    //         $task['enfPlannerEntryID'] = $enfPlannerEntryID;
+    //         $task['sequenceNumber'] = $order;
 
-            if (!empty($task['enfPlannerTaskID'])) {
-                $plannerTasksGateway->update($task['enfPlannerTaskID'], $task);
-            } else {
-                $task['enfPlannerTaskID'] = $plannerTasksGateway->insert($task);
-            }
+    //         if (!empty($task['enfPlannerTaskID'])) {
+    //             $plannerTasksGateway->update($task['enfPlannerTaskID'], $task);
+    //         } else {
+    //             $task['enfPlannerTaskID'] = $plannerTasksGateway->insert($task);
+    //         }
 
-            $taskIDs[] = str_pad($task['enfPlannerTaskID'], 12, '0', STR_PAD_LEFT);
-        } 
+    //         $taskIDs[] = str_pad($task['enfPlannerTaskID'], 12, '0', STR_PAD_LEFT);
+    //     } 
 
-        $plannerTasksGateway->deleteTasksByEntryNotInList($enfPlannerEntryID, $taskIDs);
+    //     $plannerTasksGateway->deleteTasksByEntryNotInList($enfPlannerEntryID, $taskIDs);
+    // }
+
+    // Create session entries
+    $partialFail = false;
+    foreach ($enfPlannedSessionIDs as $enfBlockID => $enfPlannedSessionID) {
+        $sessionDetails = $plannedSessionGateway->getSessionDetailsByID($enfPlannedSessionID);
+
+        $data = [
+            'enfPlannedSessionID' => $enfPlannedSessionID,
+            'enfSessionID'        => $sessionDetails['enfSessionID'] ?? null,
+            'enfBlockID'          => $enfBlockID ?? null,
+            'gibbonSpaceID'       => $sessionDetails['gibbonSpaceID'] ?? null,
+            'date'                => $date,
+            'timeStart'           => $sessionDetails['timeStart'] ?? null,
+            'timeEnd'             => $sessionDetails['timeEnd'] ?? null,
+            'block'               => $sessionDetails['block'] ?? null,
+            'type'                => $sessionDetails['type'] ?? null,
+            'focus'               => $sessionDetails['focus'] ?? null,
+            'comment'             => $comment,
+            'locked'              => 'N',
+        ];
+
+        $enfSessionStudentID = $sessionStudentGateway->insertAndUpdate($data + [
+            'gibbonPersonID'         => $session->get('gibbonPersonID'),
+            'gibbonPersonIDCreated'  => $session->get('gibbonPersonID'),
+            'timestampCreated'       => date('Y-m-d H:i:s'),
+            'gibbonPersonIDModified' => $session->get('gibbonPersonID'),
+            'timestampModified'      => date('Y-m-d H:i:s'),
+        ], $data + [
+            'gibbonPersonIDModified' => $session->get('gibbonPersonID'),
+            'timestampModified'      => date('Y-m-d H:i:s'),
+        ]);
+
+        $partialFail &= empty($enfSessionStudentID);
     }
 
     // Build the discussion entry
     $discussionGateway = $container->get(DiscussionGateway::class);
-
-    // Remove trailing whitespace
-    $comment = trim(preg_replace('/^<p>|<\/p>$/i', '', $_POST['comment'] ?? ''));
 
     if (!empty($comment)) {
         $data = [
@@ -137,12 +193,12 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/planne
 
         // Insert the record
         $inserted = $discussionGateway->insert($data);
-
-        $URL .= !$inserted
-            ? "&return=error2"
-            : "&return=success0";
-
+        $partialFail &= !$inserted;
     }
+
+    $URL .= $partialFail
+        ? "&return=warning1"
+        : "&return=success0";
 
     header("Location: {$URL}");
 }

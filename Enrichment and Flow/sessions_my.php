@@ -23,8 +23,13 @@ use Gibbon\Http\Url;
 use Gibbon\Services\Format;
 use Gibbon\Forms\Form;
 use Gibbon\Tables\DataTable;
-use Gibbon\Module\EnrichmentandFlow\Domain\SessionGateway;
+use Gibbon\Module\EnrichmentandFlow\Domain\BlockGateway;
 use Gibbon\Module\EnrichmentandFlow\Domain\PlannedSessionGateway;
+use Gibbon\Module\EnrichmentandFlow\Domain\PlannedSessionTeacherGateway;
+use Gibbon\Module\EnrichmentandFlow\Domain\SessionStudentGateway;
+use Gibbon\Module\EnrichmentandFlow\Forms\DateSelectForm;
+use Gibbon\Domain\Attendance\AttendanceLogPersonGateway;
+use Gibbon\Module\EnrichmentandFlow\ENFFormat;
 
 if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/sessions_my.php') == false) {
     // Access denied
@@ -34,28 +39,125 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/sessio
     $page->breadcrumbs
         ->add(__m('My Sessions'));
 
-    $sessionGateway = $container->get(SessionGateway::class);
+    // Date selector
+    $date = !empty($_GET['date'])? Format::dateConvert($_GET['date']) : date('Y-m-d');
+    $url = Url::fromModuleRoute('Enrichment and Flow', 'sessions_my');
+    $page->write($container->get(DateSelectForm::class)->createForm($url, $date)->getOutput());
 
-    $plannedSessions = $sessionGateway->selectPlannedSessionsByTeacher($session->get('gibbonPersonID'))->fetchGrouped();
+    $blockGateway = $container->get(BlockGateway::class);
+    $attendanceGateway = $container->get(AttendanceLogPersonGateway::class);
+    $sessionStudentGateway = $container->get(SessionStudentGateway::class);
+    $plannedSessionGateway = $container->get(PlannedSessionGateway::class);
+    $plannedSessionTeacherGateway = $container->get(PlannedSessionTeacherGateway::class);
 
-    foreach ($plannedSessions as $name => $sessions) {
+    $blocks = $blockGateway->selectBlocks()->fetchAll();
+    if (empty($blocks)) {
+        $page->write($page->getBlankSlate(__m('There are no ENF sessions running at this time.')));
+        return;
+    }
+
+    foreach ($blocks as $block) {
+
+        $sessions = $plannedSessionGateway->selectPlannedSessionsByTeacher($block['enfBlockID'], $session->get('gibbonPersonID'))->fetchAll();
+        $sessions = array_map(function ($values) use ($plannedSessionTeacherGateway, $sessionStudentGateway, $date) {
+            $values['teachers'] = $plannedSessionTeacherGateway->selectTeachersByPlannedSession($values['enfPlannedSessionID'])->fetchAll();
+            $values['students'] = $sessionStudentGateway->selectStudentsByPlannedSessionAndDate($values['enfPlannedSessionID'], $date)->fetchAll();
+            $values['studentCount'] = count($values['students']);
+            return $values;
+        }, $sessions);
 
         $table = DataTable::create('plannedSessions');
-        $table->setTitle($name);
+        $table->setTitle($block['name']);
+        $table->setDescription($block['weekday'] .' ('.Format::timeRange($block['timeStart'], $block['timeEnd']).')');
         $table->addMetaData('blankSlate', __m('You do not have a session yet, click to add one'));
         
-        if (!empty($sessions['focus'])) {
-            $table->addHeaderAction('edit', __('Change Session'))
-                ->setURL(Url::fromModuleRoute('Enrichment and Flow', 'sessions_my_add'));
-        } else {
+        if (empty($sessions)) {
             $table->addHeaderAction('add', __('Run a Session'))
-                ->setURL(Url::fromModuleRoute('Enrichment and Flow', 'sessions_my_add'));
+                ->setURL(Url::fromModuleRoute('Enrichment and Flow', 'sessions_my_addEdit')->withQueryParams(['enfBlockID' => $block['enfBlockID']]));
 
             $table->addHeaderAction('join', __('Join a Session'))
-                ->setURL(Url::fromModuleRoute('Enrichment and Flow', 'sessions_my_join'))
+                ->setURL(Url::fromModuleRoute('Enrichment and Flow', 'sessions_my_join')->withQueryParams(['enfBlockID' => $block['enfBlockID']]))
                 ->setIcon('users');
         }
-        
-        echo $table->render([]);
+
+        $table->addColumn('focus', __('Focus'))->width('20%');
+
+        $table->addColumn('type', __('Type'))
+            ->width('15%')
+            ->format(function($values){
+                return ENFFormat::sessionTag($values['type']);
+            });
+
+        $table->addColumn('facility', __('Facility'))->width('15%');
+
+        $table->addColumn('studentCount', __('Students'))->width('10%');
+
+        $table->addColumn('teachers', __('Teachers'))
+            ->format(function($values){
+                return !empty($values['teachers'])
+                    ? Format::nameList($values['teachers'], 'Staff', false, true)
+                    : __('None');
+            });
+
+        // ACTIONS
+        $table->addActionColumn()
+        ->addParam('enfBlockID', $block['enfBlockID'])
+        ->addParam('enfPlannedSessionID')
+        ->format(function ($values, $actions) {
+            $actions->addAction('edit', __('Edit'))
+                    ->setURL('/modules/Enrichment and Flow/sessions_my_addEdit.php');
+
+            if (!empty($values['teachers']) && count($values['teachers']) > 1) {
+                $actions->addAction('delete', __('Leave Session'))
+                    ->setURL('/modules/Enrichment and Flow/sessions_my_delete.php')
+                    ->setIcon('user-minus');
+            } elseif ($values['studentCount'] == 0) {
+                $actions->addAction('delete', __('Cancel Session'))
+                    ->setURL('/modules/Enrichment and Flow/sessions_my_delete.php')
+                    ->setIcon('cross');
+            }
+            
+        });
+
+        $page->write($table->render($sessions));
+
+        if (!empty($sessions[0]['students'])) {
+            $discussion = [];
+
+            foreach ($sessions[0]['students'] as $student) {
+                $url = Url::fromModuleRoute('Enrichment and Flow', 'planner_view.php')->withQueryParams(['gibbonPersonID' => $student['gibbonPersonID']]);
+                $attendance = $attendanceGateway->selectAttendanceLogsByPersonAndDate($student['gibbonPersonID'], $this->date, 'N');
+                $log = ($attendance->rowCount() > 0) ? $attendance->fetch() : [];
+                $isAbsent = !empty($log) && ($log['direction'] == 'Out' || $log['scope'] == 'Offsite');
+
+                $menu = $page->fetchFromTemplate('plannerMenu.twig.html', [
+                    'gibbonPersonID' => $student['gibbonPersonID'],
+                ]);
+
+                $discussion[] = [
+                    'surname'       => $student['surname'],
+                    'preferredName' => $student['preferredName'],
+                    'image_240'     => $student['image_240'],
+                    'type'          => '', //!$isAbsent ? __('Incomplete') : __($log['type']),
+                    'tag'           => '', //!$isAbsent ? 'error' : 'dull',
+                    'url'           => $url,
+                    'label'         => $student['formGroup'],
+                    'comment'       => $student['comment'],
+                    'timestamp'     => $student['timestampModified'],
+                    'extra'         => $menu,
+                ];
+
+            }
+
+            $page->writeFromTemplate('ui/discussion.twig.html', [
+                'compact'    => true,
+                'discussion' => $discussion,
+            ]);
+
+        } else {
+            $page->write($page->getBlankSlate(__m('There are no students signed up for the selected date.')));
+        }
+
+        $page->write('<br>');
     }
 }

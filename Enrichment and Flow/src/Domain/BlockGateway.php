@@ -41,12 +41,34 @@ class BlockGateway extends QueryableGateway
     {
         $query = $this
             ->newQuery()
-            ->cols(['enfBlock.enfBlockID', 'enfBlock.name','enfBlock.timeStart','enfBlock.timeEnd','enfBlock.signUpSameDay','enfBlock.signUpStart', 'gibbonDaysOfWeek.name as weekday'])
+            ->cols(['enfBlock.enfBlockID', 'enfBlock.name','enfBlock.timeStart','enfBlock.timeEnd','enfBlock.signUpSameDay','enfBlock.signUpStart', 'gibbonDaysOfWeek.name as weekday', 'gibbonCourse.nameShort as courseNameShort'])
             ->from($this->getTableName())
+            ->leftJoin('gibbonCourse', 'gibbonCourse.gibbonCourseID=enfBlock.gibbonCourseID')
             ->leftJoin('gibbonDaysOfWeek', 'gibbonDaysOfWeek.gibbonDaysOfWeekID=enfBlock.gibbonDaysOfWeekID');
 
         return $this->runQuery($query, $criteria);
     }
 
-    
+    public function selectBlocks()
+    {
+        $data = [];
+        $sql = "SELECT enfBlock.enfBlockID, enfBlock.name, enfBlock.timeStart, enfBlock.timeEnd, enfBlock.signUpSameDay, enfBlock.signUpStart, gibbonDaysOfWeek.name as weekday
+                FROM enfBlock
+                JOIN gibbonDaysOfWeek ON (gibbonDaysOfWeek.gibbonDaysOfWeekID=enfBlock.gibbonDaysOfWeekID)
+                ORDER BY gibbonDaysOfWeek.sequenceNumber, enfBlock.timeStart";
+
+        return $this->db()->select($sql, $data);
+    }
+
+    public function selectBlocksByWeekday(string $weekday)
+    {
+        $data = ['weekday' => $weekday];
+        $sql = "SELECT enfBlock.enfBlockID, enfBlock.name, enfBlock.timeStart, enfBlock.timeEnd, enfBlock.signUpSameDay, enfBlock.signUpStart, gibbonDaysOfWeek.name as weekday
+                FROM enfBlock
+                JOIN gibbonDaysOfWeek ON (gibbonDaysOfWeek.gibbonDaysOfWeekID=enfBlock.gibbonDaysOfWeekID)
+                WHERE gibbonDaysOfWeek.name=:weekday
+                ORDER BY gibbonDaysOfWeek.sequenceNumber, enfBlock.timeStart";
+
+        return $this->db()->select($sql, $data);
+    }
 }

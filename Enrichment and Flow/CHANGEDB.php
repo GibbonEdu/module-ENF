@@ -68,20 +68,17 @@ CREATE TABLE `enfBlock` (
     `signUpStart` TIME NULL,
     PRIMARY KEY (`enfBlockID`)
 ) ENGINE = InnoDB DEFAULT CHARSET=utf8mb3;end
-
 CREATE TABLE `enfBlockFacility` ( 
     `enfBlockFacilityID` INT UNSIGNED NOT NULL AUTO_INCREMENT , 
     `gibbonSpaceID` INT UNSIGNED NOT NULL,
     PRIMARY KEY (`enfBlockFacilityID`)
 ) ENGINE = InnoDB DEFAULT CHARSET=utf8mb3;end
-
 CREATE TABLE `enfBlockDate` ( 
     `enfBlockDateID` INT UNSIGNED NOT NULL AUTO_INCREMENT , 
     `enfBlockID` INT UNSIGNED NOT NULL,
     `date` DATE NOT NULL,
     PRIMARY KEY (`enfBlockDateID`)
 ) ENGINE = InnoDB DEFAULT CHARSET=utf8mb3;end
-
 CREATE TABLE `enfPlannedSession` ( 
     `enfPlannedSessionID` INT UNSIGNED NOT NULL AUTO_INCREMENT , 
     `enfBlockID` INT UNSIGNED NOT NULL,
@@ -91,7 +88,6 @@ CREATE TABLE `enfPlannedSession` (
     `timestampCreated` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ,
     PRIMARY KEY (`enfPlannedSessionID`)
 ) ENGINE = InnoDB DEFAULT CHARSET=utf8mb3;end
-
 CREATE TABLE `enfPlannedSessionTeacher` ( 
     `enfPlannedSessionTeacherID` INT UNSIGNED NOT NULL AUTO_INCREMENT , 
     `enfPlannedSessionID` INT UNSIGNED NOT NULL,
@@ -99,7 +95,6 @@ CREATE TABLE `enfPlannedSessionTeacher` (
     `timestampCreated` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ,
     PRIMARY KEY (`enfPlannedSessionTeacherID`)
 ) ENGINE = InnoDB DEFAULT CHARSET=utf8mb3;end
-
 CREATE TABLE `enfSession` ( 
     `enfSessionID` INT UNSIGNED NOT NULL AUTO_INCREMENT , 
     `type` VARCHAR(120) NOT NULL,
@@ -112,7 +107,6 @@ CREATE TABLE `enfSession` (
     `timestampModified` TIMESTAMP NOT NULL, 
     PRIMARY KEY (`enfSessionID`)
 ) ENGINE = InnoDB DEFAULT CHARSET=utf8mb3;end
-
 CREATE TABLE `enfSessionStudent` ( 
     `enfSessionStudentID` INT UNSIGNED NOT NULL AUTO_INCREMENT , 
     `enfPlannedSessionID` INT UNSIGNED NOT NULL,
@@ -141,4 +135,58 @@ INSERT INTO `gibbonPermission` (`permissionID` ,`gibbonRoleID` ,`gibbonActionID`
 INSERT INTO `gibbonAction` (`gibbonActionID`, `gibbonModuleID`, `name`, `precedence`, `category`, `description`, `URLList`, `entryURL`, `entrySidebar`, `defaultPermissionAdmin`, `defaultPermissionTeacher`, `defaultPermissionStudent`, `defaultPermissionParent`, `defaultPermissionSupport`, `categoryPermissionStaff`, `categoryPermissionStudent`, `categoryPermissionParent`, `categoryPermissionOther`) VALUES (NULL, (SELECT gibbonModuleID FROM gibbonModule WHERE name='Enrichment and Flow'), 'All Sessions', 0, 'Flow', 'View all planned sessions', 'sessions_view.php','sessions_view.php', 'Y', 'Y', 'Y', 'N', 'N', 'N', 'Y', 'N', 'N', 'N');end
 INSERT INTO `gibbonPermission` (`permissionID` ,`gibbonRoleID` ,`gibbonActionID`) VALUES (NULL , 1, (SELECT gibbonActionID FROM gibbonAction JOIN gibbonModule ON (gibbonAction.gibbonModuleID=gibbonModule.gibbonModuleID) WHERE gibbonModule.name='Enrichment and Flow' AND gibbonAction.name='All Sessions'));end
 INSERT INTO `gibbonPermission` (`permissionID` ,`gibbonRoleID` ,`gibbonActionID`) VALUES (NULL , 2, (SELECT gibbonActionID FROM gibbonAction JOIN gibbonModule ON (gibbonAction.gibbonModuleID=gibbonModule.gibbonModuleID) WHERE gibbonModule.name='Enrichment and Flow' AND gibbonAction.name='All Sessions'));end
+";
+
+//v1.4.01
+++$count;
+$sql[$count][0] = '1.4.01';
+$sql[$count][1] = "
+DROP TABLE IF EXISTS `enfBlock`,`enfBlockFacility`,`enfPlannedSession`,`enfPlannedSessionTeacher`;end
+CREATE TABLE `enfBlock` ( 
+    `enfBlockID` INT UNSIGNED NOT NULL AUTO_INCREMENT , 
+    `gibbonSchoolYearID` INT UNSIGNED NOT NULL,
+    `gibbonCourseID` INT UNSIGNED NOT NULL,
+    `name` VARCHAR(60) NOT NULL,
+    `gibbonDaysOfWeekID` INT UNSIGNED ZEROFILL NOT NULL,
+    `timeStart` TIME NOT NULL,
+    `timeEnd` TIME NOT NULL,
+    `signUpSameDay` ENUM('Y','N') NOT NULL DEFAULT 'Y',
+    `signUpStart` TIME NULL,
+    PRIMARY KEY (`enfBlockID`)
+) ENGINE = InnoDB DEFAULT CHARSET=utf8mb3;end
+ CREATE TABLE `enfBlockFacility` ( 
+    `enfBlockFacilityID` INT UNSIGNED NOT NULL AUTO_INCREMENT , 
+    `enfBlockID` INT UNSIGNED NOT NULL,
+    `gibbonSpaceID` INT UNSIGNED NOT NULL,
+    PRIMARY KEY (`enfBlockFacilityID`)
+) ENGINE = InnoDB DEFAULT CHARSET=utf8mb3;end
+ CREATE TABLE `enfPlannedSession` ( 
+    `enfPlannedSessionID` INT UNSIGNED NOT NULL AUTO_INCREMENT , 
+    `enfBlockID` INT UNSIGNED NOT NULL,
+    `enfSessionID` INT UNSIGNED NOT NULL,
+    `enfBlockFacilityID` INT UNSIGNED NULL,
+    `gibbonSpaceID` INT UNSIGNED NULL,
+    `notes` TEXT NULL,
+    `gibbonPersonIDCreated` INT NOT NULL,
+    `timestampCreated` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ,
+    PRIMARY KEY (`enfPlannedSessionID`)
+) ENGINE = InnoDB DEFAULT CHARSET=utf8mb3;end
+ CREATE TABLE `enfPlannedSessionTeacher` ( 
+    `enfPlannedSessionTeacherID` INT UNSIGNED NOT NULL AUTO_INCREMENT , 
+    `enfPlannedSessionID` INT UNSIGNED NOT NULL,
+    `gibbonPersonID` INT UNSIGNED NOT NULL,
+    `timestampCreated` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ,
+    PRIMARY KEY (`enfPlannedSessionTeacherID`),
+    UNIQUE KEY (`enfPlannedSessionID`, `gibbonPersonID`)
+) ENGINE = InnoDB DEFAULT CHARSET=utf8mb3;end
+INSERT INTO `gibbonAction` (`gibbonActionID`, `gibbonModuleID`, `name`, `precedence`, `category`, `description`, `URLList`, `entryURL`, `entrySidebar`, `defaultPermissionAdmin`, `defaultPermissionTeacher`, `defaultPermissionStudent`, `defaultPermissionParent`, `defaultPermissionSupport`, `categoryPermissionStaff`, `categoryPermissionStudent`, `categoryPermissionParent`, `categoryPermissionOther`) VALUES (NULL, (SELECT gibbonModuleID FROM gibbonModule WHERE name='Enrichment and Flow'), 'My Planner', 0, 'Flow', 'An overview of ENF plans for a given student.', 'planner_view.php','planner_view.php', 'Y', 'N', 'N', 'Y', 'N', 'N', 'N', 'Y', 'N', 'N');end
+UPDATE `gibbonAction` SET name='All Sessions_view' WHERE name='All Sessions' AND gibbonModuleID=(SELECT gibbonModuleID FROM gibbonModule WHERE name='Enrichment and Flow');end
+INSERT INTO `gibbonAction` (`gibbonActionID`, `gibbonModuleID`, `name`, `precedence`, `category`, `description`, `URLList`, `entryURL`, `entrySidebar`, `defaultPermissionAdmin`, `defaultPermissionTeacher`, `defaultPermissionStudent`, `defaultPermissionParent`, `defaultPermissionSupport`, `categoryPermissionStaff`, `categoryPermissionStudent`, `categoryPermissionParent`, `categoryPermissionOther`) VALUES (NULL, (SELECT gibbonModuleID FROM gibbonModule WHERE name='Enrichment and Flow'), 'All Sessions_manage', 1, 'Flow', 'View and manage all planned sessions', 'sessions_view.php,sessions_view_addEdit.php, sessions_view_addEditStudent.php','sessions_view.php', 'Y', 'Y', 'Y', 'N', 'N', 'N', 'Y', 'N', 'N', 'N');end
+INSERT INTO `gibbonPermission` (`permissionID` ,`gibbonRoleID` ,`gibbonActionID`) VALUES (NULL , 1, (SELECT gibbonActionID FROM gibbonAction JOIN gibbonModule ON (gibbonAction.gibbonModuleID=gibbonModule.gibbonModuleID) WHERE gibbonModule.name='Enrichment and Flow' AND gibbonAction.name='All Sessions_manage'));end
+ALTER TABLE `enfSessionStudent` ADD `locked` ENUM('Y','N') NOT NULL DEFAULT 'N' AFTER `comment`;end
+ALTER TABLE `enfSessionStudent` CHANGE `session` `focus` VARCHAR(120) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL;end
+ALTER TABLE `enfSessionStudent` ADD UNIQUE(`enfBlockID`, `gibbonPersonID`, `date`);end
+ALTER TABLE `enfSessionStudent` ADD `gibbonPersonIDModified` INT NOT NULL AFTER `gibbonPersonIDCreated`, ADD `timestampModified` TIMESTAMP NOT NULL AFTER `timestampCreated`;end
+UPDATE `gibbonAction` SET name='All Sessions_view' WHERE name='Plan & Log' AND gibbonModuleID=(SELECT gibbonModuleID FROM gibbonModule WHERE name='Enrichment and Flow');end
+ALTER TABLE `enfSessionStudent` ADD `status` VARCHAR(60) NOT NULL DEFAULT 'Present' AFTER `comment`;end
 ";

@@ -75,13 +75,15 @@ class DailyPlannerGateway extends QueryableGateway
     public function selectENFStudentsByTeacher($gibbonSchoolYearID, $gibbonPersonIDTeacher)
     {
         $data = ['gibbonSchoolYearID' => $gibbonSchoolYearID, 'gibbonPersonIDTeacher' => $gibbonPersonIDTeacher, 'today' => date('Y-m-d')];
-        $sql = "SELECT DISTINCT student.gibbonPersonID, student.surname, student.preferredName, student.email, student.image_240
+        $sql = "SELECT DISTINCT student.gibbonPersonID, student.surname, student.preferredName, student.email, student.image_240, gibbonFormGroup.name as formGroup
                 FROM gibbonCourseClassPerson AS teacherClass
                 JOIN gibbonCourseClass ON (gibbonCourseClass.gibbonCourseClassID=teacherClass.gibbonCourseClassID)
                 JOIN gibbonCourse ON (gibbonCourse.gibbonCourseID=gibbonCourseClass.gibbonCourseID)
                 JOIN gibbonPerson AS teacher ON (teacherClass.gibbonPersonID=teacher.gibbonPersonID)
                 JOIN gibbonCourseClassPerson AS studentClass ON (studentClass.gibbonCourseClassID=teacherClass.gibbonCourseClassID)
                 JOIN gibbonPerson AS student ON (studentClass.gibbonPersonID=student.gibbonPersonID)
+                JOIN gibbonStudentEnrolment ON (gibbonStudentEnrolment.gibbonPersonID=student.gibbonPersonID AND gibbonStudentEnrolment.gibbonSchoolYearID=gibbonCourse.gibbonSchoolYearID)
+                JOIN gibbonFormGroup ON (gibbonFormGroup.gibbonFormGroupID=gibbonStudentEnrolment.gibbonFormGroupID)
                 WHERE gibbonCourse.nameShort LIKE 'ENF%'
                 AND teacher.status='Full'
                 AND teacherClass.role='Teacher'
@@ -100,11 +102,13 @@ class DailyPlannerGateway extends QueryableGateway
     public function selectENFStudentsByClass($gibbonSchoolYearID, $gibbonCourseClassID)
     {
         $data = ['gibbonSchoolYearID' => $gibbonSchoolYearID, 'gibbonCourseClassID' => $gibbonCourseClassID, 'today' => date('Y-m-d')];
-        $sql = "SELECT DISTINCT student.gibbonPersonID, student.surname, student.preferredName, student.email, student.image_240
+        $sql = "SELECT DISTINCT student.gibbonPersonID, student.surname, student.preferredName, student.email, student.image_240, gibbonFormGroup.name as formGroup
                 FROM gibbonCourseClass
                 JOIN gibbonCourse ON (gibbonCourse.gibbonCourseID=gibbonCourseClass.gibbonCourseID)
                 JOIN gibbonCourseClassPerson ON (gibbonCourseClassPerson.gibbonCourseClassID=gibbonCourseClass.gibbonCourseClassID)
                 JOIN gibbonPerson AS student ON (gibbonCourseClassPerson.gibbonPersonID=student.gibbonPersonID)
+                JOIN gibbonStudentEnrolment ON (gibbonStudentEnrolment.gibbonPersonID=student.gibbonPersonID AND gibbonStudentEnrolment.gibbonSchoolYearID=gibbonCourse.gibbonSchoolYearID)
+                JOIN gibbonFormGroup ON (gibbonFormGroup.gibbonFormGroupID=gibbonStudentEnrolment.gibbonFormGroupID)
                 WHERE gibbonCourse.nameShort LIKE 'ENF%'
                 AND gibbonCourse.gibbonSchoolYearID=:gibbonSchoolYearID 
                 AND gibbonCourseClass.gibbonCourseClassID=:gibbonCourseClassID
@@ -146,8 +150,13 @@ class DailyPlannerGateway extends QueryableGateway
         $sql = "SELECT gibbonCourseClass.gibbonCourseClassID as value, CONCAT(gibbonCourse.nameShort, '.', gibbonCourseClass.nameShort) as name
                 FROM gibbonCourseClass 
                 JOIN gibbonCourse ON (gibbonCourse.gibbonCourseID=gibbonCourseClass.gibbonCourseID)
+                LEFT JOIN gibbonCourseClassPerson ON (gibbonCourseClassPerson.gibbonCourseClassID=gibbonCourseClass.gibbonCourseClassID AND gibbonCourseClassPerson.role='Student')
+                LEFT JOIN gibbonPerson ON (gibbonPerson.gibbonPersonID=gibbonCourseClassPerson.gibbonPersonID AND gibbonPerson.status='Full')
                 WHERE gibbonCourse.nameShort LIKE 'ENF%'
                 AND gibbonCourse.gibbonSchoolYearID=:gibbonSchoolYearID 
+                AND gibbonCourseClass.reportable='Y'
+                GROUP BY gibbonCourseClass.gibbonCourseClassID
+                HAVING (COUNT(gibbonPerson.gibbonPersonID) > 0)
                 ORDER BY gibbonCourse.nameShort, gibbonCourseClass.nameShort";
 
         return $this->db()->select($sql, $data);

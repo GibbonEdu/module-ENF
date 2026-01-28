@@ -46,7 +46,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/sessio
     $form->addHiddenValue('address', $session->get('address'));
     $form->addHiddenValue('enfSessionID', $enfSessionID);
 
-    $types = ['Consolidation', 'Extension', 'Innovation', 'Enrichment'];
+    $types = ['Consolidation', 'Extension', 'Innovation', 'Enrichment', 'Other'];
     $form->addSelect('type')
         ->label(__('Type'))
         ->fromArray($types)

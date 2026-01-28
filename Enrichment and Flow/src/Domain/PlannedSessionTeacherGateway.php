@@ -33,4 +33,39 @@ class PlannedSessionTeacherGateway extends QueryableGateway
     private static $primaryKey = 'enfPlannedSessionTeacherID';
     private static $searchableColumns = [''];
 
+    public function selectTeachersByPlannedSession($enfPlannedSessionID)
+    {
+        $query = $this
+            ->newSelect()
+            ->cols(['enfPlannedSessionTeacher.enfPlannedSessionTeacherID', 'gibbonPerson.gibbonPersonID', 'gibbonPerson.title', 'gibbonPerson.preferredName', 'gibbonPerson.surname'])
+            ->from('enfPlannedSessionTeacher')
+            ->innerJoin('enfPlannedSession', 'enfPlannedSession.enfPlannedSessionID=enfPlannedSessionTeacher.enfPlannedSessionID')
+            ->innerJoin('gibbonPerson', 'gibbonPerson.gibbonPersonID=enfPlannedSessionTeacher.gibbonPersonID')
+            ->where('enfPlannedSessionTeacher.enfPlannedSessionID=:enfPlannedSessionID')
+            ->bindValue('enfPlannedSessionID', $enfPlannedSessionID)
+            ->orderBy(['enfPlannedSessionTeacher.timestampCreated', 'gibbonPerson.surname', 'gibbonPerson.preferredName']);
+
+        return $this->runSelect($query);
+    }
+
+    public function selectAvailableTeachersByBlock($enfBlockID, $date)
+    {
+        $data =['enfBlockID' => $enfBlockID, 'date' => $date];
+        $sql = "SELECT gibbonCourseClassPerson.role, gibbonPerson.gibbonPersonID, gibbonPerson.surname, gibbonPerson.preferredName
+            FROM enfBlock
+                INNER JOIN gibbonCourse ON (gibbonCourse.gibbonCourseID=enfBlock.gibbonCourseID)
+                INNER JOIN gibbonCourseClass ON (gibbonCourse.gibbonCourseID=gibbonCourseClass.gibbonCourseID)
+                INNER JOIN gibbonCourseClassPerson ON (gibbonCourseClass.gibbonCourseClassID=gibbonCourseClassPerson.gibbonCourseClassID)
+                INNER JOIN gibbonPerson ON (gibbonCourseClassPerson.gibbonPersonID=gibbonPerson.gibbonPersonID)
+            WHERE enfBlock.enfBlockID=:enfBlockID
+                AND gibbonPerson.status='Full'
+                AND (gibbonPerson.dateStart IS NULL OR gibbonPerson.dateStart<=:date)
+                AND (gibbonPerson.dateEnd IS NULL OR gibbonPerson.dateEnd>=:date)
+                AND (gibbonCourseClassPerson.role='Teacher' OR gibbonCourseClassPerson.role='Assistant')
+            GROUP BY gibbonPerson.gibbonPersonID
+            ORDER BY gibbonPerson.surname, gibbonPerson.preferredName";
+
+        return $this->db()->select($sql, $data);
+    }
+
 }

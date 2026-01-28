@@ -33,4 +33,102 @@ class PlannedSessionGateway extends QueryableGateway
     private static $primaryKey = 'enfPlannedSessionID';
     private static $searchableColumns = [''];
 
+    public function getSessionDetailsByID(string $enfPlannedSessionID)
+    {
+        $data = ['enfPlannedSessionID' => $enfPlannedSessionID];
+        $sql = "SELECT 
+                    enfPlannedSession.enfPlannedSessionID,
+                    enfPlannedSession.notes,
+                    enfPlannedSession.gibbonSpaceID,
+                    enfSession.enfSessionID, 
+                    enfSession.type, 
+                    enfSession.focus, 
+                    enfSession.maxStudents, 
+                    enfBlock.enfBlockID, 
+                    enfBlock.name as block, 
+                    enfBlock.timeStart, 
+                    enfBlock.timeEnd
+                FROM enfPlannedSession
+                JOIN enfSession ON (enfSession.enfSessionID=enfPlannedSession.enfSessionID)
+                JOIN enfBlock ON (enfBlock.enfBlockID=enfPlannedSession.enfBlockID)
+                WHERE enfPlannedSession.enfPlannedSessionID=:enfPlannedSessionID";
+
+        return $this->db()->selectOne($sql, $data);
+    }
+
+    public function selectPlannedSessionListByBlock($enfBlockID)
+    {
+        $query = $this
+            ->newSelect()
+            ->cols(['enfSession.type', 'enfPlannedSession.enfPlannedSessionID', 'CONCAT(enfSession.focus, " (", gibbonSpace.name, ")") as focus'])
+            ->from('enfPlannedSession')
+            ->innerJoin('enfSession', 'enfSession.enfSessionID=enfPlannedSession.enfSessionID')
+            ->innerJoin('gibbonSpace', 'gibbonSpace.gibbonSpaceID=enfPlannedSession.gibbonSpaceID')
+            ->where('enfPlannedSession.enfBlockID=:enfBlockID')
+            ->bindValue('enfBlockID', $enfBlockID)
+            ->orderBy(['enfSession.type', 'enfSession.focus']);
+
+        return $this->runSelect($query);
+    }
+
+    public function selectPlannedSessionsByDate(string $enfBlockID, string $date)
+    {
+        $query = $this
+            ->newSelect()
+            ->cols(['enfBlock.name as groupBy', 'enfBlock.enfBlockID', 'enfBlock.name as block','enfBlock.timeStart','enfBlock.timeEnd', 'gibbonDaysOfWeek.name as weekday', 'enfPlannedSession.enfPlannedSessionID', 'enfSession.enfSessionID', 'enfSession.focus', 'enfSession.type', 'gibbonSpace.name as facility', 'COUNT(DISTINCT enfSessionStudent.gibbonPersonID) as students', 'enfSession.maxStudents'])
+            ->from('enfBlock')
+            ->innerJoin('enfPlannedSession', 'enfBlock.enfBlockID=enfPlannedSession.enfBlockID')
+            ->innerJoin('enfSession', 'enfSession.enfSessionID=enfPlannedSession.enfSessionID')
+            ->leftJoin('enfSessionStudent', 'enfSessionStudent.enfPlannedSessionID=enfPlannedSession.enfPlannedSessionID')
+            ->leftJoin('gibbonSpace', 'gibbonSpace.gibbonSpaceID=enfPlannedSession.gibbonSpaceID')
+            ->leftJoin('gibbonDaysOfWeek', 'gibbonDaysOfWeek.gibbonDaysOfWeekID=enfBlock.gibbonDaysOfWeekID')
+            ->where('enfPlannedSession.enfBlockID=:enfBlockID')
+            ->bindValue('enfBlockID', $enfBlockID)
+            ->groupBy(['enfPlannedSession.enfPlannedSessionID'])
+            ->orderBy(['gibbonDaysOfWeek.sequenceNumber', 'enfBlock.timeStart']);
+
+        return $this->runSelect($query);
+    }
+
+    public function selectPlannedSessionsByTeacher(string $enfBlockID, string $gibbonPersonID)
+    {
+        $query = $this
+            ->newSelect()
+            ->cols(['enfBlock.name as groupBy', 'enfBlock.enfBlockID', 'enfBlock.name','enfBlock.timeStart','enfBlock.timeEnd', 'gibbonDaysOfWeek.name as weekday', 'enfPlannedSessionTeacher.enfPlannedSessionID', 'enfPlannedSessionTeacher.gibbonPersonID', 'enfSession.enfSessionID', 'enfSession.focus', 'enfSession.type', 'gibbonSpace.name as facility', 'COUNT(DISTINCT enfSessionStudent.gibbonPersonID) as students'])
+            ->from('enfBlock')
+            ->innerJoin('enfPlannedSession', 'enfBlock.enfBlockID=enfPlannedSession.enfBlockID')
+            ->innerJoin('enfSession', 'enfSession.enfSessionID=enfPlannedSession.enfSessionID')
+            ->innerJoin('enfPlannedSessionTeacher', 'enfPlannedSessionTeacher.enfPlannedSessionID=enfPlannedSession.enfPlannedSessionID')
+            ->leftJoin('enfSessionStudent', 'enfSessionStudent.enfPlannedSessionID=enfPlannedSession.enfPlannedSessionID')
+            ->leftJoin('gibbonSpace', 'gibbonSpace.gibbonSpaceID=enfPlannedSession.gibbonSpaceID')
+            ->leftJoin('gibbonDaysOfWeek', 'gibbonDaysOfWeek.gibbonDaysOfWeekID=enfBlock.gibbonDaysOfWeekID')
+            ->where('enfPlannedSession.enfBlockID=:enfBlockID')
+            ->bindValue('enfBlockID', $enfBlockID)
+            ->where('enfPlannedSessionTeacher.gibbonPersonID=:gibbonPersonID')
+            ->bindValue('gibbonPersonID', $gibbonPersonID)
+            ->groupBy(['enfPlannedSession.enfPlannedSessionID'])
+            ->orderBy(['gibbonDaysOfWeek.sequenceNumber', 'enfBlock.timeStart']);
+
+        return $this->runSelect($query);
+    }
+
+    public function selectAvailablePlannedSessionsByBlock(string $enfBlockID, string $date)
+    {
+        $query = $this
+            ->newSelect()
+            ->cols(['enfBlock.name as groupBy', 'enfBlock.enfBlockID', 'enfBlock.name as block','enfBlock.timeStart','enfBlock.timeEnd', 'gibbonDaysOfWeek.name as weekday', 'enfPlannedSession.enfPlannedSessionID', 'enfSession.enfSessionID', 'enfSession.focus', 'enfSession.type', 'gibbonSpace.name as facility', 'COUNT(DISTINCT enfSessionStudent.gibbonPersonID) as students', 'enfSession.maxStudents'])
+            ->from('enfBlock')
+            ->innerJoin('enfPlannedSession', 'enfBlock.enfBlockID=enfPlannedSession.enfBlockID')
+            ->innerJoin('enfSession', 'enfSession.enfSessionID=enfPlannedSession.enfSessionID')
+            ->leftJoin('enfSessionStudent', 'enfSessionStudent.enfPlannedSessionID=enfPlannedSession.enfPlannedSessionID')
+            ->leftJoin('gibbonSpace', 'gibbonSpace.gibbonSpaceID=enfPlannedSession.gibbonSpaceID')
+            ->leftJoin('gibbonDaysOfWeek', 'gibbonDaysOfWeek.gibbonDaysOfWeekID=enfBlock.gibbonDaysOfWeekID')
+            ->where('enfPlannedSession.enfBlockID=:enfBlockID')
+            ->bindValue('enfBlockID', $enfBlockID)
+            ->groupBy(['enfPlannedSession.enfPlannedSessionID'])
+            ->having('students < maxStudents')
+            ->orderBy(['gibbonDaysOfWeek.sequenceNumber', 'enfBlock.timeStart']);
+
+        return $this->runSelect($query);
+    }
 }

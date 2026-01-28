@@ -30,6 +30,10 @@ use Gibbon\Tables\DataTable;
 use Gibbon\Http\Url;
 use Gibbon\Domain\Attendance\AttendanceLogPersonGateway;
 use Gibbon\Domain\System\SettingGateway;
+use Gibbon\Module\EnrichmentandFlow\ENFFormat;
+use Gibbon\Module\EnrichmentandFlow\Domain\BlockGateway;
+use Gibbon\Module\EnrichmentandFlow\Domain\PlannedSessionGateway;
+use Gibbon\Module\EnrichmentandFlow\Domain\SessionStudentGateway;
 
 /**
  * StaffPlannerView
@@ -45,17 +49,23 @@ class StaffPlannerView
     protected $session;
     protected $settingGateway;
     protected $dailyPlannerGateway;
+    protected $blockGateway;
+    protected $plannedSessionGateway;
+    protected $sessionStudentGateway;
     protected $journeyGateway;
     protected $attendanceGateway;
 
     protected $date;
     protected $gibbonCourseClassID;
 
-    public function __construct(Session $session, SettingGateway $settingGateway, DailyPlannerGateway $dailyPlannerGateway, JourneyGateway $journeyGateway, AttendanceLogPersonGateway $attendanceGateway)
+    public function __construct(Session $session, SettingGateway $settingGateway, DailyPlannerGateway $dailyPlannerGateway, BlockGateway $blockGateway, PlannedSessionGateway $plannedSessionGateway, SessionStudentGateway $sessionStudentGateway, JourneyGateway $journeyGateway, AttendanceLogPersonGateway $attendanceGateway)
     {
         $this->session = $session;
         $this->settingGateway = $settingGateway;
         $this->dailyPlannerGateway = $dailyPlannerGateway;
+        $this->plannedSessionGateway = $plannedSessionGateway;
+        $this->sessionStudentGateway = $sessionStudentGateway;
+        $this->blockGateway = $blockGateway;
         $this->journeyGateway = $journeyGateway;
         $this->attendanceGateway = $attendanceGateway;
     }
@@ -99,8 +109,16 @@ class StaffPlannerView
             $attendance = $this->attendanceGateway->selectAttendanceLogsByPersonAndDate($student['gibbonPersonID'], $this->date, 'N');
             $log = ($attendance->rowCount() > 0) ? $attendance->fetch() : [];
             $isAbsent = !empty($log) && ($log['direction'] == 'Out' || $log['scope'] == 'Offsite');
+            $taskCode = '';
 
-            if (!empty($plannerEntry['enfPlannerEntryID'])) {
+            $studentSessions = $this->sessionStudentGateway->selectSessionsByStudentsAndDate($student['gibbonPersonID'], $this->date)->fetchGroupedUnique();
+
+            if (!empty($studentSessions)) {
+                $taskCode = $page->fetchFromTemplate('sessions.twig.html', [
+                    'sessions' => $studentSessions,
+                    'types'    => ENFFormat::$sessionTypes,
+                ]);
+            } elseif (!empty($plannerEntry['enfPlannerEntryID'])) {
                 $tasks = $this->dailyPlannerGateway->selectPlannerTasksByEntry($plannerEntry['enfPlannerEntryID'])->fetchAll();
     
                 if (!empty($tasks)) {
@@ -115,7 +133,15 @@ class StaffPlannerView
                     ]);
                 }
             }
+            
 
+            $taskCode .= $page->fetchFromTemplate('plannerMenu.twig.html', [
+                'gibbonPersonID' => $student['gibbonPersonID'],
+                'enfPlannerEntryID' => $plannerEntry['enfPlannerEntryID'] ?? null,
+            ]);
+
+            $locked = '';
+            
             if (!empty($plannerEntry)) {
                 // Existing entry
                 $discussion[] = [
@@ -124,7 +150,8 @@ class StaffPlannerView
                     'image_240'     => $student['image_240'],
                     'comment'       => $plannerEntry['comment'],
                     'timestamp'     => $plannerEntry['timestamp'],
-                    'type'          => __('Complete'),
+                    'label'         => $student['formGroup'],
+                    'type'          => '✓',
                     'tag'           => 'success',
                     'url'           => $url,
                     'extra'         => $taskCode ?? '',
@@ -135,9 +162,11 @@ class StaffPlannerView
                     'surname'       => $student['surname'],
                     'preferredName' => $student['preferredName'],
                     'image_240'     => $student['image_240'],
+                    'label'         => $student['formGroup'],
                     'type'          => !$isAbsent ? __('Incomplete') : __($log['type']),
                     'tag'           => !$isAbsent ? 'error' : 'dull',
                     'url'           => $url,
+                    'extra'         => $taskCode ?? '',
                 ];
             }
         }

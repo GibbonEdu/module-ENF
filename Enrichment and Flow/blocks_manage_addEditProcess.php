@@ -41,6 +41,8 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/blocks
     $blockFacilityGateway = $container->get(BlockFacilityGateway::class);
 
     $data = [
+        'gibbonSchoolYearID' => $_POST['gibbonSchoolYearID'] ?? $session->get('gibbonSchoolYearID'),
+        'gibbonCourseID'     => $_POST['gibbonCourseID'] ?? null,
         'name'               => $_POST['name'] ?? '',
         'gibbonDaysOfWeekID' => $_POST['gibbonDaysOfWeekID'] ?? null,
         'timeStart'          => $_POST['timeStart'] ?? '',
@@ -50,7 +52,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/blocks
     ];
 
     // Validate the required values are present
-    if (empty($data['name']) || empty($data['gibbonDaysOfWeekID']) || empty($data['timeStart']) || empty($data['timeEnd'])) {
+    if (empty($data['gibbonCourseID']) || empty($data['name']) || empty($data['gibbonDaysOfWeekID']) || empty($data['timeStart']) || empty($data['timeEnd'])) {
         header("Location: {$URL}&return=error1");
         exit;
     }

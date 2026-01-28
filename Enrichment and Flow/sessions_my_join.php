@@ -21,57 +21,46 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 use Gibbon\Http\Url;
 use Gibbon\Forms\Form;
+use Gibbon\Module\EnrichmentandFlow\Domain\BlockFacilityGateway;
 use Gibbon\Module\EnrichmentandFlow\Domain\SessionGateway;
 use Gibbon\Module\EnrichmentandFlow\Domain\PlannedSessionGateway;
+use Gibbon\Forms\DatabaseFormFactory;
+use Gibbon\Module\EnrichmentandFlow\Domain\BlockGateway;
 
-
-if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/sessions_manage_addEdit.php') == false) {
+if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/sessions_my_join.php') == false) {
     // Access denied
     $page->addError(__('You do not have access to this action.'));
 } else {
     // Proceed!
-    $enfPlannedSessionID = $_REQUEST['enfPlannedSessionID'] ?? '';
+    $enfBlockID = $_REQUEST['enfBlockID'] ?? '';
 
     $page->breadcrumbs
         ->add(__m('My Sessions'), 'sessions_my.php')
-        ->add(!empty($enfPlannedSessionID) ? __m('Change Session') : __m('Run a Session'));
+        ->add(__m('Join a Session'));
 
-    if (isset($_GET['editID'])) {
-        $page->return->setEditLink(Url::fromModuleRoute('Enrichment and Flow', 'sessions_manage_addEdit')->withQueryParam('enfPlannedSessionID', $_GET['editID']));
+    $block = $container->get(BlockGateway::class)->getByID($enfBlockID);
+    if (empty($block)) {
+        $page->addError(__('The specified record cannot be found.'));
+        return;
     }
 
-    $values = $container->get(PlannedSessionGateway::class)->getByID($enfPlannedSessionID);
+    $plannedSessionGateway = $container->get(PlannedSessionGateway::class);
 
-    $form = Form::create('sessionAddEdit', Url::fromModuleRoute('Enrichment and Flow', 'sessions_manage_addEditProcess')->directLink());
+    $sessions = $plannedSessionGateway->selectPlannedSessionListByBlock($enfBlockID)->fetchAll();
 
+    $form = Form::create('sessionAddEdit', Url::fromModuleRoute('Enrichment and Flow', 'sessions_my_joinProcess')->directLink());
+    $form->setFactory(DatabaseFormFactory::create($pdo));
+    
     $form->addHiddenValue('address', $session->get('address'));
-    $form->addHiddenValue('enfPlannedSessionID', $enfPlannedSessionID);
+    $form->addHiddenValue('enfBlockID', $enfBlockID);
 
-    $sessions = [];
-    $form->addSelect('type')
-        ->label(__('Session'))
-        ->fromArray($sessions)
+    $form->addSelect('enfPlannedSessionID')
+        ->label(__('Current Sessions'))
+        ->fromArray($sessions, 'enfPlannedSessionID', 'focus', 'type')
         ->placeholder()
         ->required();
 
-    $form->addTextField('focus')
-        ->label(__('Focus'))
-        ->required()
-        ->maxLength(120);
-
-    $form->addNumber('maxStudents')
-        ->label(__('Maximum Students'))
-        ->required()
-        ->maximum(99);
-
-    $form->addRow()->addColumn()->addEditor('description')
-        ->label(__('Description'))
-        ->minimalMode()
-        ->setRows(5);
-
     $form->addRow('submit')->addSubmit();
-
-    $form->loadAllValuesFrom($values);
 
     echo $form->getOutput();
 }

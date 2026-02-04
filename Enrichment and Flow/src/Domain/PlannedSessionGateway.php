@@ -85,7 +85,7 @@ class PlannedSessionGateway extends QueryableGateway
             ->where('enfPlannedSession.enfBlockID=:enfBlockID')
             ->bindValue('enfBlockID', $enfBlockID)
             ->groupBy(['enfPlannedSession.enfPlannedSessionID'])
-            ->orderBy(['gibbonDaysOfWeek.sequenceNumber', 'enfBlock.timeStart']);
+            ->orderBy(['gibbonDaysOfWeek.sequenceNumber', 'enfBlock.timeStart', 'enfSession.type', 'enfSession.focus']);
 
         return $this->runSelect($query);
     }
@@ -94,7 +94,7 @@ class PlannedSessionGateway extends QueryableGateway
     {
         $query = $this
             ->newSelect()
-            ->cols(['enfBlock.name as groupBy', 'enfBlock.enfBlockID', 'enfBlock.name','enfBlock.timeStart','enfBlock.timeEnd', 'gibbonDaysOfWeek.name as weekday', 'enfPlannedSessionTeacher.enfPlannedSessionID', 'enfPlannedSessionTeacher.gibbonPersonID', 'enfSession.enfSessionID', 'enfSession.focus', 'enfSession.type', 'gibbonSpace.name as facility', 'COUNT(DISTINCT enfSessionStudent.gibbonPersonID) as students'])
+            ->cols(['enfBlock.name as groupBy', 'enfBlock.enfBlockID', 'enfBlock.name','enfBlock.timeStart','enfBlock.timeEnd', 'gibbonDaysOfWeek.name as weekday', 'enfPlannedSessionTeacher.enfPlannedSessionID', 'enfPlannedSessionTeacher.gibbonPersonID', 'enfSession.enfSessionID', 'enfSession.focus', 'enfSession.type', 'gibbonSpace.name as facility', 'COUNT(DISTINCT enfSessionStudent.gibbonPersonID) as students', 'enfSession.maxStudents'])
             ->from('enfBlock')
             ->innerJoin('enfPlannedSession', 'enfBlock.enfBlockID=enfPlannedSession.enfBlockID')
             ->innerJoin('enfSession', 'enfSession.enfSessionID=enfPlannedSession.enfSessionID')

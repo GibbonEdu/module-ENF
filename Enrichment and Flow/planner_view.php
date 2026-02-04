@@ -29,7 +29,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/planne
     //Acess denied
     $page->addError(__('You do not have access to this action.'));
 } else {
-    $highestAction = getHighestGroupedAction($guid, '/modules/Enrichment and Flow/planner.php', $connection2);
+    $highestAction = getHighestGroupedAction($guid, '/modules/Enrichment and Flow/planner_view.php', $connection2);
     if (empty($highestAction)) {
         $page->addError(__('You do not have access to this action.'));
         return;
@@ -43,7 +43,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/planne
     $roleCategory = $session->get('gibbonRoleIDCurrentCategory');
     $date = !empty($_GET['date'])? Format::dateConvert($_GET['date']) : date('Y-m-d');
 
-    if ($highestAction == 'Plan & Log' || $roleCategory == 'Student') {
+    if ($highestAction == 'My Planner' || $roleCategory == 'Student') {
         $gibbonPersonID = $session->get('gibbonPersonID');
         $page->breadcrumbs->add(__m('My Planner'));
     } else if ($highestAction == 'Planner Overview') {
@@ -58,6 +58,11 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/planne
 
     $class = $dailyPlannerGateway->getENFClassByPerson($gibbonSchoolYearID, $gibbonPersonID);
     $teachers = $dailyPlannerGateway->selectENFTeachersByStudent($gibbonSchoolYearID, $gibbonPersonID)->fetchAll();
+
+    if (empty($class)) {
+        $page->addAlert(__m('This section is only available to ENF students.'), 'empty');
+        return;
+    }
 
     $categories = $container->get(SettingGateway::class)->getSettingByScope('Enrichment and Flow', 'taskCategories');
     $categories = json_decode($categories, true);

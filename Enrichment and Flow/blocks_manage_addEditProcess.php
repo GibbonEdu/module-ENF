@@ -77,12 +77,12 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/blocks
 
         $facilities = array_map(function ($item) {
             return [
+                'enfBlockFacilityID' => intval($item['enfBlockFacilityID']),
                 'gibbonSpaceID' => intval($item['gibbonSpaceID']),
             ];
         }, $_POST['facilities'] ?? []);
 
         $facilities = array_combine(array_keys($_POST['order'] ?? []), array_values($facilities));
-        ksort($facilities);
 
         $facilityIDs = [];
         foreach ($facilities as $order => $facility) {
@@ -98,7 +98,6 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/blocks
         } 
 
         $blockFacilityGateway->deleteFacilitiesNotInList($enfBlockID, $facilityIDs);
-
     }
 
     $URL .= !empty($enfBlockID)

@@ -33,10 +33,13 @@ $_POST = $container->get(Validator::class)->sanitize($_POST, ['notes' => 'HTML']
 
 $enfPlannedSessionID = $_REQUEST['enfPlannedSessionID'] ?? '';
 $enfBlockID = $_REQUEST['enfBlockID'] ?? '';
+$mode = $_REQUEST['mode'] ?? '';
 
 $URL = Url::fromModuleRoute('Enrichment and Flow', 'sessions_my_addEdit')->withQueryParams(['enfPlannedSessionID' => $enfPlannedSessionID, 'enfBlockID' => $enfBlockID]);
 
-$URLSuccess = Url::fromModuleRoute('Enrichment and Flow', 'sessions_my')->withQueryParams(['enfPlannedSessionID' => $enfPlannedSessionID, 'enfBlockID' => $enfBlockID]);
+$URLSuccess = $mode == 'manage'
+    ? Url::fromModuleRoute('Enrichment and Flow', 'sessions_my_addEdit')->withQueryParams(['enfPlannedSessionID' => $enfPlannedSessionID, 'enfBlockID' => $enfBlockID, 'mode' => $mode])
+    : Url::fromModuleRoute('Enrichment and Flow', 'sessions_my')->withQueryParams(['enfPlannedSessionID' => $enfPlannedSessionID, 'enfBlockID' => $enfBlockID]);
 
 if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/sessions_my_addEdit.php') == false) {
     header("Location: {$URL}&return=error0");

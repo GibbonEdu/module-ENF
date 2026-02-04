@@ -37,13 +37,14 @@ class SessionStudentGateway extends QueryableGateway
     {
         $query = $this
             ->newSelect()
-            ->cols(['enfSessionStudent.enfSessionStudentID', 'gibbonPerson.gibbonPersonID', 'gibbonPerson.title', 'gibbonPerson.preferredName', 'gibbonPerson.surname', 'gibbonPerson.image_240', 'gibbonFormGroup.name as formGroup', 'enfSessionStudent.locked', 'enfSessionStudent.comment', 'enfSessionStudent.timestampModified'])
+            ->cols(['enfSessionStudent.enfSessionStudentID', 'enfSessionStudent.enfPlannedSessionID', 'gibbonPerson.gibbonPersonID', 'gibbonPerson.title', 'gibbonPerson.preferredName', 'gibbonPerson.surname', 'gibbonPerson.image_240', 'gibbonFormGroup.name as formGroup', 'enfSessionStudent.locked', 'enfSessionStudent.comment', 'enfSessionStudent.status', 'enfSessionStudent.timestampModified', 'enfPlannerEntry.enfPlannerEntryID'])
             ->from('enfPlannedSession')
             ->innerJoin('enfBlock', 'enfBlock.enfBlockID=enfPlannedSession.enfBlockID')
             ->innerJoin('enfSessionStudent', 'enfSessionStudent.enfPlannedSessionID=enfPlannedSession.enfPlannedSessionID')
             ->innerJoin('gibbonPerson', 'gibbonPerson.gibbonPersonID=enfSessionStudent.gibbonPersonID')
             ->leftJoin('gibbonStudentEnrolment', 'gibbonStudentEnrolment.gibbonPersonID=gibbonPerson.gibbonPersonID AND gibbonStudentEnrolment.gibbonSchoolYearID=enfBlock.gibbonSchoolYearID')
             ->leftJoin('gibbonFormGroup', 'gibbonFormGroup.gibbonFormGroupID=gibbonStudentEnrolment.gibbonFormGroupID')
+            ->leftJoin('enfPlannerEntry', 'enfPlannerEntry.gibbonPersonID=gibbonPerson.gibbonPersonID AND enfPlannerEntry.date=enfSessionStudent.date')
             ->where('enfSessionStudent.enfPlannedSessionID=:enfPlannedSessionID')
             ->bindValue('enfPlannedSessionID', $enfPlannedSessionID)
             ->where('enfSessionStudent.date=:date')
@@ -57,7 +58,7 @@ class SessionStudentGateway extends QueryableGateway
     {
         $query = $this
             ->newSelect()
-            ->cols(['enfBlock.enfBlockID as groupBy', 'enfBlock.enfBlockID', 'enfBlock.name as block', 'enfPlannedSession.enfPlannedSessionID', 'enfSessionStudent.enfSessionStudentID', 'enfSession.focus', 'enfSession.type', 'gibbonSpace.name as facility', 'enfSessionStudent.locked', 'enfSessionStudent.comment', 'enfSessionStudent.timestampCreated', 'enfSessionStudent.timestampModified', 'GROUP_CONCAT(DISTINCT CONCAT(teacher.title, " ", teacher.surname) SEPARATOR ", ") as teachers'])
+            ->cols(['enfBlock.enfBlockID as groupBy', 'enfBlock.enfBlockID', 'enfBlock.name as block', 'enfPlannedSession.enfPlannedSessionID', 'enfSessionStudent.enfSessionStudentID', 'enfSession.focus', 'enfSession.type', 'gibbonSpace.name as facility', 'enfSessionStudent.locked', 'enfSessionStudent.comment', 'enfSessionStudent.status', 'enfSessionStudent.timestampCreated', 'enfSessionStudent.timestampModified', 'GROUP_CONCAT(DISTINCT CONCAT(teacher.title, " ", teacher.surname) SEPARATOR ", ") as teachers'])
             ->from('enfSessionStudent')
             ->innerJoin('enfPlannedSession', 'enfSessionStudent.enfPlannedSessionID=enfPlannedSession.enfPlannedSessionID')
             ->innerJoin('enfSession', 'enfSession.enfSessionID=enfPlannedSession.enfSessionID')
@@ -112,6 +113,7 @@ class SessionStudentGateway extends QueryableGateway
                 WHERE gibbonCourse.gibbonSchoolYearID=:gibbonSchoolYearID 
                 AND gibbonCourseClassPerson.role='Student'
                 AND gibbonCourseClassPerson.reportable = 'Y'
+                AND (gibbonCourseClass.nameShort <> 'Intern' AND gibbonCourseClass.nameShort <> 'AYP' AND gibbonCourseClass.nameShort <> 'OL')
                 AND student.status = 'Full'
                 AND (student.dateStart IS NULL OR student.dateStart <= :date)
                 AND (student.dateEnd IS NULL OR student.dateEnd >= :date)

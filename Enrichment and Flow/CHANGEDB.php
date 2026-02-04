@@ -187,6 +187,13 @@ ALTER TABLE `enfSessionStudent` ADD `locked` ENUM('Y','N') NOT NULL DEFAULT 'N' 
 ALTER TABLE `enfSessionStudent` CHANGE `session` `focus` VARCHAR(120) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL;end
 ALTER TABLE `enfSessionStudent` ADD UNIQUE(`enfBlockID`, `gibbonPersonID`, `date`);end
 ALTER TABLE `enfSessionStudent` ADD `gibbonPersonIDModified` INT NOT NULL AFTER `gibbonPersonIDCreated`, ADD `timestampModified` TIMESTAMP NOT NULL AFTER `timestampCreated`;end
-UPDATE `gibbonAction` SET name='All Sessions_view' WHERE name='Plan & Log' AND gibbonModuleID=(SELECT gibbonModuleID FROM gibbonModule WHERE name='Enrichment and Flow');end
+UPDATE `gibbonAction` SET URLList='planner_view.php' WHERE name='My Planner' AND gibbonModuleID=(SELECT gibbonModuleID FROM gibbonModule WHERE name='Enrichment and Flow');end
 ALTER TABLE `enfSessionStudent` ADD `status` VARCHAR(60) NOT NULL DEFAULT 'Present' AFTER `comment`;end
+UPDATE `gibbonAction` SET URLList='sessions_my.php,sessions_my_addEdit.php,sessions_my_join.php,sessions_my_delete.php' WHERE name='My Sessions' AND gibbonModuleID=(SELECT gibbonModuleID FROM gibbonModule WHERE name='Enrichment and Flow');end
+";
+
+//v1.4.02
+++$count;
+$sql[$count][0] = '1.4.02';
+$sql[$count][1] = "
 ";

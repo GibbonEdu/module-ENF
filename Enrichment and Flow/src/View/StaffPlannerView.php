@@ -134,11 +134,10 @@ class StaffPlannerView
                 }
             }
             
-
-            $taskCode .= $page->fetchFromTemplate('plannerMenu.twig.html', [
-                'gibbonPersonID' => $student['gibbonPersonID'],
-                'enfPlannerEntryID' => $plannerEntry['enfPlannerEntryID'] ?? null,
-            ]);
+            // $taskCode .= $page->fetchFromTemplate('plannerMenu.twig.html', [
+            //     'gibbonPersonID' => $student['gibbonPersonID'],
+            //     'enfPlannerEntryID' => $plannerEntry['enfPlannerEntryID'] ?? null,
+            // ]);
 
             $locked = '';
             

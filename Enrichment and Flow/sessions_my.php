@@ -80,7 +80,9 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/sessio
                 ->setIcon('users');
         }
 
-        $table->addColumn('focus', __('Focus'))->width('20%');
+        $table->addColumn('facility', __('Location'))->width('10%');
+
+        $table->addColumn('focus', __('Focus'))->width('25%');
 
         $table->addColumn('type', __('Type'))
             ->width('15%')
@@ -88,9 +90,19 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/sessio
                 return ENFFormat::sessionTag($values['type']);
             });
 
-        $table->addColumn('facility', __('Facility'))->width('15%');
-
-        $table->addColumn('studentCount', __('Students'))->width('10%');
+        $table->addColumn('studentCount', __('Students'))
+            ->width('10%')
+            ->format(function($values) use (&$page) {
+                return $page->fetchFromTemplate('ui/progress.twig.html', [
+                    'progressCount'  => $values['studentCount'],
+                    'totalCount'     => $values['maxStudents'],
+                    'leftCount'      => $values['maxStudents'] - $values['studentCount'],
+                    'progressLabel'  => __('Full'),
+                    'width'          => 'w-32',
+                    'progressColour' => 'blue',
+                    'title'          => __('Students'),
+                ]);
+            });
 
         $table->addColumn('teachers', __('Teachers'))
             ->format(function($values){
@@ -131,15 +143,19 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/sessio
                 $isAbsent = !empty($log) && ($log['direction'] == 'Out' || $log['scope'] == 'Offsite');
 
                 $menu = $page->fetchFromTemplate('plannerMenu.twig.html', [
-                    'gibbonPersonID' => $student['gibbonPersonID'],
+                    'gibbonPersonID'      => $student['gibbonPersonID'],
+                    'enfSessionStudentID' => $student['enfSessionStudentID'],
+                    'enfPlannedSessionID' => $student['enfPlannedSessionID'],
+                    'enfPlannerEntryID'   => $student['enfPlannerEntryID'],
+                    'status'              => $student['status'],
                 ]);
 
                 $discussion[] = [
                     'surname'       => $student['surname'],
                     'preferredName' => $student['preferredName'],
                     'image_240'     => $student['image_240'],
-                    'type'          => '', //!$isAbsent ? __('Incomplete') : __($log['type']),
-                    'tag'           => '', //!$isAbsent ? 'error' : 'dull',
+                    'type'          => $student['status'] != 'Present' ? __($student['status']) : '',
+                    'tag'           => $student['status'] != 'Present' ? ($student['status'] == 'Missing' ? 'error' : 'message') : '',
                     'url'           => $url,
                     'label'         => $student['formGroup'],
                     'comment'       => $student['comment'],

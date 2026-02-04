@@ -9,7 +9,7 @@ For info about editing, see: https://twig.symfony.com/doc/2.x/
 -->#}
 
 <div x-data="{menuOpen: false}" @click.outside="menuOpen = false" @keydown.escape="menuOpen = false" class="block relative ml-4">
-    <button @click="menuOpen = !menuOpen" :class="{'bg-gray-500/20': menuOpen}" class="flex items-center rounded-full p-1 text-gray-500 hover:text-gray-700 hover:bg-gray-500/20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:text-gray-400 dark:hover:text-gray-300 dark:focus-visible:outline-indigo-500">
+    <button @click="menuOpen = !menuOpen" :class="{'bg-gray-500/20': menuOpen}" class="flex items-center rounded-full p-1 text-gray-600 hover:text-gray-700 hover:bg-gray-500/20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:text-gray-400 dark:hover:text-gray-300 dark:focus-visible:outline-indigo-500">
       <span class="sr-only">{{ __('Open') }}</span>
       {{ icon('basic', 'ellipsis-vertical', 'pointer-events-none block size-6 sm:size-5' ) }}
     </button>
@@ -24,18 +24,27 @@ For info about editing, see: https://twig.symfony.com/doc/2.x/
         
         class="absolute right-0 z-20 w-48 origin-top-right rounded-md bg-white shadow-lg outline-1 outline-black/5 transition transition-discrete dark:bg-gray-800 dark:shadow-none dark:-outline-offset-1 dark:outline-white/10">
       <div class="p-1.5">
-        <a href="#" @click="menuOpen = false" class="flex items-center gap-3 rounded px-3 py-2 text-sm text-gray-700 hover:text-gray-800 hover:bg-gray-100 focus:bg-gray-100 focus:text-gray-900 focus:outline-hidden dark:text-gray-300 dark:focus:bg-white/5 dark:focus:text-white">
+
+        {% if false and enfPlannerEntryID %}
+        <a href="{{ absoluteURL }}/fullscreen.php?q=/modules/Enrichment and Flow/sessions_my_studentComment.php&enfPlannerEntryID={{ enfPlannerEntryID }}&enfSessionStudentID={{ enfSessionStudentID }}&gibbonPersonID={{ gibbonPersonID }}" @click="menuOpen = false" class="thickbox flex items-center gap-3 rounded px-3 py-2 text-sm text-gray-700 hover:text-gray-800 hover:bg-indigo-500 hover:text-white focus:bg-gray-100 focus:text-gray-900 focus:outline-hidden dark:text-gray-300 dark:focus:bg-white/5 dark:focus:text-white">
             {{ icon('solid', 'chat-bubble-text', 'size-4' ) }}
-            Add Comment
+            {{ __('Add Comment') }}
         </a>
-        <a href="#" @click="menuOpen = false" class="flex items-center gap-3 rounded px-3 py-2 text-sm text-gray-700 hover:text-gray-800 hover:bg-gray-100 focus:bg-gray-100 focus:text-gray-900 focus:outline-hidden dark:text-gray-300 dark:focus:bg-white/5 dark:focus:text-white">
-            {{ icon('solid', 'user-minus', 'size-4' ) }}
-            Mark as Absent
+        {% endif %}
+
+        {% if enfSessionStudentID and status %}
+        <a href="{{ absoluteURL }}/modules/Enrichment and Flow/sessions_my_studentStatusProcess.php?enfSessionStudentID={{ enfSessionStudentID }}&gibbonPersonID={{ gibbonPersonID }}&status={{ status != 'Present' ? 'Present' : 'Missing '}}" @click="menuOpen = false" class="flex items-center gap-3 rounded px-3 py-2 text-sm text-gray-700 hover:text-gray-800 hover:bg-indigo-500 hover:text-white focus:bg-gray-100 focus:text-gray-900 focus:outline-hidden dark:text-gray-300 dark:focus:bg-white/5 dark:focus:text-white">
+            {{ icon('solid', status == 'Present' ? 'user-minus' : 'user-plus', 'size-4' ) }}
+            {{ status != 'Present' ? __('Mark as Present') : __('Mark as Missing') }}
         </a>
-        <a href="#" @click="menuOpen = false" class="flex items-center gap-3 rounded px-3 py-2 text-sm text-gray-700 hover:text-gray-800 hover:bg-gray-100 focus:bg-gray-100 focus:text-gray-900 focus:outline-hidden dark:text-gray-300 dark:focus:bg-white/5 dark:focus:text-white">
+        {% endif %}
+
+        {% if enfSessionStudentID %}
+        <a href="{{ absoluteURL }}/fullscreen.php?q=/modules/Enrichment and Flow/sessions_my_studentMove.php&enfSessionStudentID={{ enfSessionStudentID }}&gibbonPersonID={{ gibbonPersonID }}" @click="menuOpen = false" class="thickbox flex items-center gap-3 rounded px-3 py-2 text-sm text-gray-700 hover:text-gray-800 hover:bg-indigo-500 hover:text-white focus:bg-gray-100 focus:text-gray-900 focus:outline-hidden dark:text-gray-300 dark:focus:bg-white/5 dark:focus:text-white">
             {{ icon('basic', 'arrow-move', 'size-4' ) }}
-            Move Student
+            {{ __('Move Student') }}
         </a>
+        {% endif %}
       </div>
     </nav>
   </div>

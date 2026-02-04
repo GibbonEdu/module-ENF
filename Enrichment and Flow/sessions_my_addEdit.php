@@ -65,6 +65,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/sessio
     $form->addHiddenValue('address', $session->get('address'));
     $form->addHiddenValue('enfPlannedSessionID', $enfPlannedSessionID);
     $form->addHiddenValue('enfBlockID', $enfBlockID);
+    $form->addHiddenValue('mode', $mode);
 
     $canManage = Access::allows('Enrichment and Flow', 'sessions_view', 'All Sessions_manage');
     if ($mode == 'manage' && $canManage) {
@@ -84,7 +85,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/sessio
     } else {
         $sessions = $sessionGateway->selectSessionList()->fetchAll();
         $sessions[] = ['type' => '+', 'enfSessionID' => 'Create', 'focus' => __('Create a Session')];
-        $form->addSelect('enfSessionID')
+        $form->addSearchSelect('enfSessionID')
             ->label(__('Session'))
             ->fromArray($sessions, 'enfSessionID', 'focus', 'type')
             ->placeholder()

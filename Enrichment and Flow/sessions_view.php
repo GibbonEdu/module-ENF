@@ -80,15 +80,22 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/sessio
                 ->setURL(Url::fromModuleRoute('Enrichment and Flow', 'sessions_my_addEdit')->withQueryParams(['enfBlockID' => $block['enfBlockID'], 'mode' => 'manage']));
         }
 
-        $table->addColumn('focus', __('Focus'))->width('20%');
+        $table->addExpandableColumn('studentList')
+            ->format(function($values) {
+                $output = !empty($values['students']) ? Format::list(Format::nameListArray($values['students'], 'Student')) : '';
+                
+                return $output;
+            });
+
+        $table->addColumn('facility', __('Location'))->width('10%');
+
+        $table->addColumn('focus', __('Focus'))->width('25%');
 
         $table->addColumn('type', __('Type'))
             ->width('15%')
             ->format(function($values){
                 return ENFFormat::sessionTag($values['type']);
             });
-
-        $table->addColumn('facility', __('Facility'))->width('10%');
 
         $table->addColumn('studentCount', __('Students'))
             ->width('10%')
@@ -121,6 +128,10 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/sessio
                 $actions->addAction('add', __('Add'))
                     ->setURL('/modules/Enrichment and Flow/sessions_view_addEditStudent.php')
                     ->setIcon('user-plus');
+
+                $actions->addAction('delete', __('Cancel Session'))
+                    ->setURL('/modules/Enrichment and Flow/sessions_my_delete.php')
+                    ->setIcon('cross');
             });
         }
 
@@ -137,7 +148,9 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/sessio
 
     $table->addColumn('student', __('Student'))
         ->format(function($values){
-            return Format::nameLinked($values['gibbonPersonID'], '', $values['preferredName'], $values['surname'], 'Student', true, true);
+            $url = Url::fromModuleRoute('Enrichment and Flow', 'planner_view')->withQueryParams(['gibbonPersonID' => $values['gibbonPersonID']]);
+            $name = Format::name( '', $values['preferredName'], $values['surname'], 'Student', true, true);
+            return Format::link($url, $name);
         });
 
     $table->addColumn('formGroup', __('Form Group'));

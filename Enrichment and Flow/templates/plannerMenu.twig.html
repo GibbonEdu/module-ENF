@@ -26,21 +26,21 @@ For info about editing, see: https://twig.symfony.com/doc/2.x/
       <div class="p-1.5">
 
         {% if false and enfPlannerEntryID %}
-        <a href="{{ absoluteURL }}/fullscreen.php?q=/modules/Enrichment and Flow/sessions_my_studentComment.php&enfPlannerEntryID={{ enfPlannerEntryID }}&enfSessionStudentID={{ enfSessionStudentID }}&gibbonPersonID={{ gibbonPersonID }}" @click="menuOpen = false" class="thickbox flex items-center gap-3 rounded px-3 py-2 text-sm text-gray-700 hover:text-gray-800 hover:bg-indigo-500 hover:text-white focus:bg-gray-100 focus:text-gray-900 focus:outline-hidden dark:text-gray-300 dark:focus:bg-white/5 dark:focus:text-white">
+        <a href="{{ absoluteURL }}/fullscreen.php?q=/modules/Enrichment and Flow/sessions_my_studentComment.php&enfPlannerEntryID={{ enfPlannerEntryID }}&enfSessionStudentID={{ enfSessionStudentID }}&gibbonPersonID={{ gibbonPersonID }}&source={{ source }}" @click="menuOpen = false" class="thickbox flex items-center gap-3 rounded px-3 py-2 text-sm text-gray-700 hover:text-gray-800 hover:bg-indigo-500 hover:text-white focus:bg-gray-100 focus:text-gray-900 focus:outline-hidden dark:text-gray-300 dark:focus:bg-white/5 dark:focus:text-white">
             {{ icon('solid', 'chat-bubble-text', 'size-4' ) }}
             {{ __('Add Comment') }}
         </a>
         {% endif %}
 
         {% if enfSessionStudentID and status %}
-        <a href="{{ absoluteURL }}/modules/Enrichment and Flow/sessions_my_studentStatusProcess.php?enfSessionStudentID={{ enfSessionStudentID }}&gibbonPersonID={{ gibbonPersonID }}&status={{ status != 'Present' ? 'Present' : 'Missing '}}" @click="menuOpen = false" class="flex items-center gap-3 rounded px-3 py-2 text-sm text-gray-700 hover:text-gray-800 hover:bg-indigo-500 hover:text-white focus:bg-gray-100 focus:text-gray-900 focus:outline-hidden dark:text-gray-300 dark:focus:bg-white/5 dark:focus:text-white">
+        <a href="{{ absoluteURL }}/modules/Enrichment and Flow/sessions_my_studentStatusProcess.php?enfSessionStudentID={{ enfSessionStudentID }}&gibbonPersonID={{ gibbonPersonID }}&status={{ status != 'Present' ? 'Present' : 'Missing'}}&source={{ source }}" @click="menuOpen = false" class="flex items-center gap-3 rounded px-3 py-2 text-sm text-gray-700 hover:text-gray-800 hover:bg-indigo-500 hover:text-white focus:bg-gray-100 focus:text-gray-900 focus:outline-hidden dark:text-gray-300 dark:focus:bg-white/5 dark:focus:text-white">
             {{ icon('solid', status == 'Present' ? 'user-minus' : 'user-plus', 'size-4' ) }}
             {{ status != 'Present' ? __('Mark as Present') : __('Mark as Missing') }}
         </a>
         {% endif %}
 
         {% if enfSessionStudentID %}
-        <a href="{{ absoluteURL }}/fullscreen.php?q=/modules/Enrichment and Flow/sessions_my_studentMove.php&enfSessionStudentID={{ enfSessionStudentID }}&gibbonPersonID={{ gibbonPersonID }}" @click="menuOpen = false" class="thickbox flex items-center gap-3 rounded px-3 py-2 text-sm text-gray-700 hover:text-gray-800 hover:bg-indigo-500 hover:text-white focus:bg-gray-100 focus:text-gray-900 focus:outline-hidden dark:text-gray-300 dark:focus:bg-white/5 dark:focus:text-white">
+        <a href="{{ absoluteURL }}/fullscreen.php?q=/modules/Enrichment and Flow/sessions_my_studentMove.php&enfSessionStudentID={{ enfSessionStudentID }}&gibbonPersonID={{ gibbonPersonID }}&source={{ source }}" @click="menuOpen = false" class="thickbox flex items-center gap-3 rounded px-3 py-2 text-sm text-gray-700 hover:text-gray-800 hover:bg-indigo-500 hover:text-white focus:bg-gray-100 focus:text-gray-900 focus:outline-hidden dark:text-gray-300 dark:focus:bg-white/5 dark:focus:text-white">
             {{ icon('basic', 'arrow-move', 'size-4' ) }}
             {{ __('Move Student') }}
         </a>

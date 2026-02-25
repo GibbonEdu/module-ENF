@@ -34,6 +34,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/journe
     // Proceed!
     $enfJourneyID = $_GET['enfJourneyID'] ?? '';
     $statusKey = $_GET['statusKey'] ?? '';
+    
     $search = $_GET['search'] ?? '';
     $status = $_GET['status'] ?? '';
     $gibbonPersonIDStudent = isset($_GET['gibbonPersonIDStudent'])? $_GET['gibbonPersonIDStudent'] : '';

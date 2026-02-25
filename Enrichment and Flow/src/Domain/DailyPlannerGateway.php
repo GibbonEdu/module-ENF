@@ -36,7 +36,7 @@ class DailyPlannerGateway extends QueryableGateway
     public function getPlannerEntryByDate($gibbonPersonIDStudent, $date)
     {
         $data = ['gibbonPersonIDStudent' => $gibbonPersonIDStudent, 'date' => $date];
-        $sql = "SELECT enfPlannerEntry.enfPlannerEntryID, enfPlannerEntry.date, enfPlannerEntry.tasks, gibbonPerson.surname, gibbonPerson.preferredName, gibbonPerson.image_240, MAX(gibbonDiscussion.timestamp) as timestamp, GROUP_CONCAT(gibbonDiscussion.comment ORDER BY gibbonDiscussion.timestamp SEPARATOR '<br><hr class=\'my-3 border-dashed\'>') as comment
+        $sql = "SELECT enfPlannerEntry.enfPlannerEntryID, enfPlannerEntry.date, enfPlannerEntry.tasks, enfPlannerEntry.timestampCreated, gibbonPerson.surname, gibbonPerson.preferredName, gibbonPerson.image_240, MAX(gibbonDiscussion.timestamp) as timestamp, GROUP_CONCAT(gibbonDiscussion.comment ORDER BY gibbonDiscussion.timestamp SEPARATOR '<br><hr class=\'my-3 border-dashed\'>') as comment
                 FROM enfPlannerEntry
                 JOIN gibbonPerson ON (gibbonPerson.gibbonPersonID=enfPlannerEntry.gibbonPersonID)
                 LEFT JOIN gibbonDiscussion ON (gibbonDiscussion.gibbonPersonID=enfPlannerEntry.gibbonPersonID AND gibbonDiscussion.foreignTable='enfPlannerEntry' AND gibbonDiscussion.foreignTableID=enfPlannerEntry.enfPlannerEntryID)
@@ -62,7 +62,7 @@ class DailyPlannerGateway extends QueryableGateway
     public function selectPlannerEntriesByStudent($gibbonPersonIDStudent)
     {
         $data = ['gibbonPersonIDStudent' => $gibbonPersonIDStudent];
-        $sql = "SELECT enfPlannerEntry.date as groupBy, enfPlannerEntry.enfPlannerEntryID, enfPlannerEntry.date, enfPlannerEntry.tasks, gibbonPerson.surname, gibbonPerson.preferredName, gibbonPerson.image_240, gibbonDiscussion.*
+        $sql = "SELECT enfPlannerEntry.date as groupBy, enfPlannerEntry.enfPlannerEntryID, enfPlannerEntry.date, enfPlannerEntry.tasks, enfPlannerEntry.timestampCreated, gibbonPerson.surname, gibbonPerson.preferredName, gibbonPerson.image_240, gibbonDiscussion.*
                 FROM enfPlannerEntry
                 JOIN gibbonPerson ON (gibbonPerson.gibbonPersonID=enfPlannerEntry.gibbonPersonID)
                 LEFT JOIN gibbonDiscussion ON (gibbonDiscussion.gibbonPersonID=enfPlannerEntry.gibbonPersonID AND gibbonDiscussion.foreignTable='enfPlannerEntry' AND gibbonDiscussion.foreignTableID=enfPlannerEntry.enfPlannerEntryID)

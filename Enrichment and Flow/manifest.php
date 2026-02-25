@@ -27,7 +27,7 @@ $description = 'This module allows schools to implement ICHK\'s Enrichment and F
 $entryURL = 'planner.php';
 $type = 'Additional';
 $category = 'Learn';
-$version = '1.4.02';
+$version = '1.4.05';
 $author = "Gibbon Foundation";
 $url = "https://gibbonedu.org";
 
@@ -98,7 +98,7 @@ $moduleTables[] = "CREATE TABLE `enfJourney` (
   `enfOpportunityID` int(4) unsigned zerofill NULL DEFAULT NULL,
   `enfCreditID` int(4) unsigned zerofill NULL DEFAULT NULL,
   `gibbonPersonIDSchoolMentor` int(10) unsigned zerofill NULL DEFAULT NULL,
-  `statusKey` varchar(20) DEFAULT NULL,
+  `statusKey` varchar(32) DEFAULT NULL,
   `status` enum('Current','Current - Pending','Complete - Pending','Complete - Approved','Exempt','Evidence Not Yet Approved') NOT NULL DEFAULT 'Current',
   `timestampJoined` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `timestampCompletePending` timestamp NULL DEFAULT NULL,
@@ -115,6 +115,7 @@ $moduleTables[] = "CREATE TABLE `enfPlannerEntry` (
     `enfPlannerEntryID` INT(12) UNSIGNED ZEROFILL NOT NULL AUTO_INCREMENT , 
     `gibbonPersonID` INT(10) UNSIGNED ZEROFILL NOT NULL , 
     `date` DATE NOT NULL , `tasks` TEXT NULL , 
+    `timestampCreated` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ,
     PRIMARY KEY (`enfPlannerEntryID`), 
     UNIQUE KEY `entry` (`gibbonPersonID`, `date`)
 ) ENGINE = InnoDB DEFAULT CHARSET=utf8mb3;";
@@ -645,6 +646,26 @@ $actionRows[] = [
     'defaultPermissionSupport'  => 'N',
     'categoryPermissionStaff'   => 'N',
     'categoryPermissionStudent' => 'Y',
+    'categoryPermissionParent'  => 'N',
+    'categoryPermissionOther'   => 'N',
+];
+
+$actionRows[] = [
+    'name'                      => 'Student Sessions',
+    'precedence'                => '0',
+    'category'                  => 'Reports',
+    'description'               => 'View a list of all students and where they are',
+    'URLList'                   => 'report_sessions_view.php',
+    'entryURL'                  => 'report_sessions_view.php',
+    'entrySidebar'              => 'Y',
+    'menuShow'                  => 'Y',
+    'defaultPermissionAdmin'    => 'Y',
+    'defaultPermissionTeacher'  => 'Y',
+    'defaultPermissionStudent'  => 'N',
+    'defaultPermissionParent'   => 'N',
+    'defaultPermissionSupport'  => 'N',
+    'categoryPermissionStaff'   => 'Y',
+    'categoryPermissionStudent' => 'N',
     'categoryPermissionParent'  => 'N',
     'categoryPermissionOther'   => 'N',
 ];

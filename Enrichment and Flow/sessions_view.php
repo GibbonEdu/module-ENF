@@ -62,7 +62,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/sessio
 
         $sessions = $plannedSessionGateway->selectPlannedSessionsByDate($block['enfBlockID'], $date)->fetchAll();
         $sessions = array_map(function ($values) use (&$plannedSessionTeacherGateway, &$sessionStudentGateway, &$date, &$capacity) {
-            $values['teachers'] = $plannedSessionTeacherGateway->selectTeachersByPlannedSession($values['enfPlannedSessionID'])->fetchAll();
+            $values['teachers'] = $plannedSessionTeacherGateway->selectTeachersByPlannedSession($values['enfPlannedSessionID'], $date)->fetchAll();
             $values['students'] = $sessionStudentGateway->selectStudentsByPlannedSessionAndDate($values['enfPlannedSessionID'], $date)->fetchAll();
             $values['studentCount'] = count($values['students']);
             $capacity['available'] += $values['maxStudents'];
@@ -114,7 +114,17 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/sessio
         $table->addColumn('teachers', __('Teachers'))
             ->format(function($values){
                 return !empty($values['teachers'])
-                    ? Format::nameList($values['teachers'], 'Staff', false, true)
+                    ? array_reduce($values['teachers'], function ($group, $item) use ($values) {
+                        $name = Format::name('', $item['preferredName'], $item['surname'], 'Staff', false, true);
+
+                        $absent = !empty($item['absenceAllDay']) && ($item['absenceAllDay'] == 'Y' || (
+                            ($values['timeStart'] >= $item['absenceStart'] && $values['timeStart'] < $item['absenceEnd']) ||
+                            ($item['absenceStart'] >= $values['timeStart'] && $item['absenceStart'] < $values['timeEnd'])
+                        ));
+
+                        $group .= ($absent ? Format::tag($name, 'error', __('Absent')) : $name) . '<br>';
+                        return $group;
+                    }, '')
                     : __('None');
             });
 
@@ -122,6 +132,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/sessio
             // ACTIONS
             $table->addActionColumn()
             ->addParam('enfBlockID', $block['enfBlockID'])
+            ->addParam('mode', 'manage')
             ->addParam('date', $date)
             ->addParam('enfPlannedSessionID')
             ->format(function ($values, $actions) {
@@ -139,24 +150,4 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/sessio
         $page->write('<br>');
 
     }
-
-    $studentsMissing = $sessionStudentGateway->selectENFStudentsNotSignedUp($session->get('gibbonSchoolYearID'), $date)->toDataSet();
-
-    $table = DataTable::create('students');
-    $table->setTitle(__m('Not Signed Up'));
-    $table->setDescription(__m('Pending').': '.Format::tag(count($studentsMissing), 'empty'));
-
-    $table->addColumn('student', __('Student'))
-        ->format(function($values){
-            $url = Url::fromModuleRoute('Enrichment and Flow', 'planner_view')->withQueryParams(['gibbonPersonID' => $values['gibbonPersonID']]);
-            $name = Format::name( '', $values['preferredName'], $values['surname'], 'Student', true, true);
-            return Format::link($url, $name);
-        });
-
-    $table->addColumn('formGroup', __('Form Group'));
-
-    $table->addColumn('class', __('Class'))
-        ->format(Format::using('courseClassName', ['course', 'class']));
-
-    $page->write($table->render($studentsMissing));
 }

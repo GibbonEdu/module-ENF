@@ -60,7 +60,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/sessio
 
         $sessions = $plannedSessionGateway->selectPlannedSessionsByTeacher($block['enfBlockID'], $session->get('gibbonPersonID'))->fetchAll();
         $sessions = array_map(function ($values) use ($plannedSessionTeacherGateway, $sessionStudentGateway, $date) {
-            $values['teachers'] = $plannedSessionTeacherGateway->selectTeachersByPlannedSession($values['enfPlannedSessionID'])->fetchAll();
+            $values['teachers'] = $plannedSessionTeacherGateway->selectTeachersByPlannedSession($values['enfPlannedSessionID'], $date)->fetchAll();
             $values['students'] = $sessionStudentGateway->selectStudentsByPlannedSessionAndDate($values['enfPlannedSessionID'], $date)->fetchAll();
             $values['studentCount'] = count($values['students']);
             return $values;

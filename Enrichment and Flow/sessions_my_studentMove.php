@@ -38,6 +38,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/sessio
     $enfPlannedSessionID = $_REQUEST['enfPlannedSessionID'] ?? '';
     $enfSessionStudentID = $_REQUEST['enfSessionStudentID'] ?? '';
     $gibbonPersonID = $_REQUEST['gibbonPersonID'] ?? '';
+    $source = $_REQUEST['source'] ?? '';
 
     $sessionStudentGateway = $container->get(SessionStudentGateway::class);
     $plannedSessionGateway = $container->get(PlannedSessionGateway::class);
@@ -63,6 +64,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/sessio
     $form->addHiddenValue('enfBlockID', $studentSession['enfBlockID']);
     $form->addHiddenValue('enfSessionStudentID', $studentSession['enfSessionStudentID']);
     $form->addHiddenValue('gibbonPersonID', $studentSession['gibbonPersonID']);
+    $form->addHiddenValue('source', $source);
 
     $form->addTextField('person')
         ->label(__('Student'))

@@ -20,7 +20,7 @@ For info about editing, see: https://twig.symfony.com/doc/2.x/
         </span>
 
         {% if session.locked == 'Y' %}
-            <span title="{{ __('Locked') }}" class="mr-2">{{ icon('solid', 'lock-closed', 'size-4 text-gray-600 align-middle' ) }}</span>
+            <span title="{{ __('Pre-set Session') }}" class="mr-2">{{ icon('solid', 'lock-closed', 'size-4 text-gray-600 align-middle' ) }}</span>
         {% endif %}
 
         <span class="tag {{ types[session.type] }}" title="{{ session.teachers }}">

@@ -115,43 +115,32 @@ class JourneyGateway extends QueryableGateway
 
     public function selectJourneyByID($enfJourneyID, $statusKey = null)
     {
-        if (empty($statusKey)) {
-            $query = $this
-                ->newQuery()
-                ->cols(['enfJourney.*', '\'Credit\' AS type', 'enfCredit.name AS name', 'logo', 'surname', 'preferredName'])
-                ->from($this->getTableName())
-                ->innerJoin('gibbonPerson', 'enfJourney.gibbonPersonIDStudent=gibbonPerson.gibbonPersonID')
-                ->innerJoin('enfCredit','enfJourney.enfCreditID=enfCredit.enfCreditID AND type=\'Credit\'')
-                ->where('enfJourneyID = :enfJourneyID')
-                ->bindValue('enfJourneyID', $enfJourneyID);
 
-            $query->unionAll()
-                ->cols(['enfJourney.*', '\'Opportunity\' AS type', 'enfOpportunity.name AS name', 'logo', 'surname', 'preferredName'])
-                ->from($this->getTableName())
-                ->innerJoin('gibbonPerson', 'enfJourney.gibbonPersonIDStudent=gibbonPerson.gibbonPersonID')
-                ->innerJoin('enfOpportunity','enfJourney.enfOpportunityID=enfOpportunity.enfOpportunityID AND type=\'Opportunity\'')
-                ->where('enfJourneyID = :enfJourneyID')
-                ->bindValue('enfJourneyID', $enfJourneyID);
+        $query = $this
+            ->newQuery()
+            ->cols(['enfJourney.*', '\'Credit\' AS type', 'enfCredit.name AS name', 'logo', 'surname', 'preferredName'])
+            ->from($this->getTableName())
+            ->innerJoin('gibbonPerson', 'enfJourney.gibbonPersonIDStudent=gibbonPerson.gibbonPersonID')
+            ->innerJoin('enfCredit','enfJourney.enfCreditID=enfCredit.enfCreditID AND type=\'Credit\'')
+            ->where('enfJourneyID = :enfJourneyID')
+            ->bindValue('enfJourneyID', $enfJourneyID);
+
+        if (!empty($statusKey)) {
+            $query->where('(statusKey=:statusKey OR statusKey = SUBSTRING(:statusKey, 1, 20))')
+                    ->bindValue('statusKey', $statusKey);
         }
-        else {
-            $query = $this
-                ->newQuery()
-                ->cols(['enfJourney.*', '\'Credit\' AS type', 'enfCredit.name AS name', 'logo', 'surname', 'preferredName'])
-                ->from($this->getTableName())
-                ->innerJoin('gibbonPerson', 'enfJourney.gibbonPersonIDStudent=gibbonPerson.gibbonPersonID')
-                ->innerJoin('enfCredit','enfJourney.enfCreditID=enfCredit.enfCreditID AND type=\'Credit\'')
-                ->where('enfJourneyID = :enfJourneyID AND statusKey = :statusKey')
-                ->bindValue('enfJourneyID', $enfJourneyID)
-                ->bindValue('statusKey', $statusKey);
 
-            $query->unionAll()
-                ->cols(['enfJourney.*', '\'Opportunity\' AS type', 'enfOpportunity.name AS name', 'logo', 'surname', 'preferredName'])
-                ->from($this->getTableName())
-                ->innerJoin('gibbonPerson', 'enfJourney.gibbonPersonIDStudent=gibbonPerson.gibbonPersonID')
-                ->innerJoin('enfOpportunity','enfJourney.enfOpportunityID=enfOpportunity.enfOpportunityID AND type=\'Opportunity\'')
-                ->where('enfJourneyID = :enfJourneyID AND statusKey = :statusKey')
-                ->bindValue('enfJourneyID', $enfJourneyID)
-                ->bindValue('statusKey', $statusKey);
+        $query->unionAll()
+            ->cols(['enfJourney.*', '\'Opportunity\' AS type', 'enfOpportunity.name AS name', 'logo', 'surname', 'preferredName'])
+            ->from($this->getTableName())
+            ->innerJoin('gibbonPerson', 'enfJourney.gibbonPersonIDStudent=gibbonPerson.gibbonPersonID')
+            ->innerJoin('enfOpportunity','enfJourney.enfOpportunityID=enfOpportunity.enfOpportunityID AND type=\'Opportunity\'')
+            ->where('enfJourneyID = :enfJourneyID')
+            ->bindValue('enfJourneyID', $enfJourneyID);
+ 
+        if (!empty($statusKey)) {
+            $query->where('(statusKey=:statusKey OR statusKey = SUBSTRING(:statusKey, 1, 20))')
+                  ->bindValue('statusKey', $statusKey);
         }
 
         return $this->runSelect($query);

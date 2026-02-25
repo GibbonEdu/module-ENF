@@ -126,9 +126,8 @@ class StudentPlannerView
         $studentSessions = $this->sessionStudentGateway->selectSessionsByStudentsAndDate($gibbonPersonID, $this->date)->fetchGroupedUnique();
         $canModify = true;
 
-        if (!empty($studentSessions)) {
-            $currentSession = current($studentSessions);
-            $timeRemaining = time() - Format::timestamp($currentSession['timestampCreated']);
+        if (!empty($plannerEntry)) {
+            $timeRemaining = time() - Format::timestamp($plannerEntry['timestampCreated']);
             $canModify = $timeRemaining < 300;
         }
 
@@ -173,8 +172,8 @@ class StudentPlannerView
             ->setURL('/modules/Enrichment and Flow/planner_view.php')
             ->displayLabel();
 
-        if (!empty($studentSessions)) {
-            $relativeTime = Format::relativeTime(date('Y-m-d H:i:s', strtotime($currentSession['timestampCreated']) + 300), true, false);
+        if (!empty($plannerEntry)) {
+            $relativeTime = Format::relativeTime(date('Y-m-d H:i:s', strtotime($plannerEntry['timestampCreated']) + 300), true, false);
             $modfificationAlert = $canModify
                 ? Format::alert(__m('You have created a plan for today. You have {relative} left to make any changes.', ['relative' => strtolower($relativeTime)]), 'success')
                 : Format::alert(__m('Your plan has been created and shared with your teachers. You cannot change locations at this time.'), 'empty');
@@ -213,6 +212,9 @@ class StudentPlannerView
                     ->selected($currentSession['enfPlannedSessionID'] ?? '');
             } else {
                 $sessionName = $currentSession ? $currentSession['facility'].' - '.$currentSession['focus'] : __('Unknown');
+                if ($locked) {
+                    $sessionName .= icon('solid', 'lock-closed', 'ml-6 mr-2 size-4 text-gray-600 align-text-bottom').Format::tag(__('Pre-set Session'), 'empty');
+                }
                 $row->addContent($sessionName)->addClass('text-sm');
                 $row->addTextField('sessionLabel[]')
                     ->addClass('hidden')
@@ -335,7 +337,7 @@ class StudentPlannerView
         foreach ($blocks as $block) {
             $sessions = $this->plannedSessionGateway->selectPlannedSessionsByDate($block['enfBlockID'], $this->date)->fetchAll();
             $sessions = array_map(function ($values) {
-                $values['teachers'] = $this->plannedSessionTeacherGateway->selectTeachersByPlannedSession($values['enfPlannedSessionID'])->fetchAll();
+                $values['teachers'] = $this->plannedSessionTeacherGateway->selectTeachersByPlannedSession($values['enfPlannedSessionID'], $this->date)->fetchAll();
                 $values['students'] = $this->sessionStudentGateway->selectStudentsByPlannedSessionAndDate($values['enfPlannedSessionID'], $this->date)->fetchAll();
                 $values['studentCount'] = count($values['students']);
                 return $values;

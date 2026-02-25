@@ -22,14 +22,18 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 use Gibbon\Data\Validator;
 use Gibbon\Module\EnrichmentandFlow\Domain\PlannedSessionGateway;
 use Gibbon\Module\EnrichmentandFlow\Domain\PlannedSessionTeacherGateway;
+use Gibbon\Http\Url;
 
 require_once '../../gibbon.php';
 
 $_POST = $container->get(Validator::class)->sanitize($_POST);
 
 $enfPlannedSessionID = $_POST['enfPlannedSessionID'] ?? '';
+$mode = $_REQUEST['mode'] ?? '';
 
-$URL = $session->get('absoluteURL').'/index.php?q=/modules/Enrichment and Flow/sessions_my.php';
+$URL = $mode == 'manage'
+    ? Url::fromModuleRoute('Enrichment and Flow', 'sessions_view')
+    : Url::fromModuleRoute('Enrichment and Flow', 'sessions_my');
 
 if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/sessions_my_delete.php') == false) {
     $URL .= '&return=error0';
@@ -51,7 +55,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/sessio
         exit;
     }
 
-    $teachers = $plannedSessionTeacherGateway->selectTeachersByPlannedSession($enfPlannedSessionID)->fetchAll();
+    $teachers = $plannedSessionTeacherGateway->selectBy(['enfPlannedSessionID' => $enfPlannedSessionID])->fetchAll();
 
     if (count($teachers) > 1) {
         // Remove the teacher from the session

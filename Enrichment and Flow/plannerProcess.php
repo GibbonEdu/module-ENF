@@ -54,13 +54,13 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/planne
     // Remove trailing whitespace
     $comment = trim(preg_replace('/^<p>|<\/p>$/i', '', $_POST['comment'] ?? ''));
 
+    $plannerEntry = $dailyPlannerGateway->getByID($enfPlannerEntryID);
     $studentSessions = $sessionStudentGateway->selectSessionsByStudentsAndDate($gibbonPersonID, $date)->fetchGroupedUnique();
     $canModify = true;
 
-    if (!empty($studentSessions)) {
-        $currentSession = current($studentSessions);
-        $timeRemaining = time() - Format::timestamp($currentSession['timestampCreated']);
-        $canModify = $timeRemaining < 330;
+    if (!empty($plannerEntry)) {
+        $timeRemaining = time() - Format::timestamp($plannerEntry['timestampCreated']);
+        $canModify = $timeRemaining < 300;
     }
 
     if (!$canModify) {
@@ -72,7 +72,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/planne
         exit;
     }
 
-    if (empty($enfPlannerEntryID)) {
+    if (empty($plannerEntry)) {
         // Create a new planner entry
         $data = [
             'gibbonPersonID' => $gibbonPersonID,

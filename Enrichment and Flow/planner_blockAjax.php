@@ -48,7 +48,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/planne
         if (empty($sessionDetails)) die();
         
         $students = $sessionStudentGateway->selectStudentsByPlannedSessionAndDate($enfPlannedSessionID, $date)->fetchAll();
-        $teachers = $plannedSessionTeacherGateway->selectTeachersByPlannedSession($enfPlannedSessionID)->fetchAll();
+        $teachers = $plannedSessionTeacherGateway->selectTeachersByPlannedSession($enfPlannedSessionID, $date)->fetchAll();
         $teachers = Format::nameList($teachers, 'Staff', false, false, ', ');
 
         $section = $formFactory->createRow()->setClass('w-full mt-4 text-sm');

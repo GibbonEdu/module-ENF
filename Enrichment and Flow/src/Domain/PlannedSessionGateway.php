@@ -120,11 +120,12 @@ class PlannedSessionGateway extends QueryableGateway
             ->from('enfBlock')
             ->innerJoin('enfPlannedSession', 'enfBlock.enfBlockID=enfPlannedSession.enfBlockID')
             ->innerJoin('enfSession', 'enfSession.enfSessionID=enfPlannedSession.enfSessionID')
-            ->leftJoin('enfSessionStudent', 'enfSessionStudent.enfPlannedSessionID=enfPlannedSession.enfPlannedSessionID')
+            ->leftJoin('enfSessionStudent', 'enfSessionStudent.enfPlannedSessionID=enfPlannedSession.enfPlannedSessionID AND enfSessionStudent.date=:date')
             ->leftJoin('gibbonSpace', 'gibbonSpace.gibbonSpaceID=enfPlannedSession.gibbonSpaceID')
             ->leftJoin('gibbonDaysOfWeek', 'gibbonDaysOfWeek.gibbonDaysOfWeekID=enfBlock.gibbonDaysOfWeekID')
             ->where('enfPlannedSession.enfBlockID=:enfBlockID')
             ->bindValue('enfBlockID', $enfBlockID)
+            ->bindValue('date', $date)
             ->groupBy(['enfPlannedSession.enfPlannedSessionID'])
             ->having('students < maxStudents')
             ->orderBy(['gibbonDaysOfWeek.sequenceNumber', 'enfBlock.timeStart']);

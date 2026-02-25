@@ -33,16 +33,21 @@ class PlannedSessionTeacherGateway extends QueryableGateway
     private static $primaryKey = 'enfPlannedSessionTeacherID';
     private static $searchableColumns = [''];
 
-    public function selectTeachersByPlannedSession($enfPlannedSessionID)
+    public function selectTeachersByPlannedSession($enfPlannedSessionID, $date)
     {
         $query = $this
             ->newSelect()
-            ->cols(['enfPlannedSessionTeacher.enfPlannedSessionTeacherID', 'gibbonPerson.gibbonPersonID', 'gibbonPerson.title', 'gibbonPerson.preferredName', 'gibbonPerson.surname'])
+            ->cols(['enfPlannedSessionTeacher.enfPlannedSessionTeacherID', 'gibbonPerson.gibbonPersonID', 'gibbonPerson.title', 'gibbonPerson.preferredName', 'gibbonPerson.surname', 'gibbonStaffAbsenceDate.allDay as absenceAllDay', 'gibbonStaffAbsenceDate.timeStart as absenceStart', 'gibbonStaffAbsenceDate.timeEnd as absenceEnd'])
             ->from('enfPlannedSessionTeacher')
             ->innerJoin('enfPlannedSession', 'enfPlannedSession.enfPlannedSessionID=enfPlannedSessionTeacher.enfPlannedSessionID')
             ->innerJoin('gibbonPerson', 'gibbonPerson.gibbonPersonID=enfPlannedSessionTeacher.gibbonPersonID')
+            ->leftJoin('gibbonStaffAbsence', 'gibbonStaffAbsence.gibbonPersonID=enfPlannedSessionTeacher.gibbonPersonID AND gibbonStaffAbsence.status="Approved"')
+            ->leftJoin('gibbonStaffAbsenceType', 'gibbonStaffAbsenceType.gibbonStaffAbsenceTypeID=gibbonStaffAbsence.gibbonStaffAbsenceTypeID')
+            ->leftJoin('gibbonStaffAbsenceDate', 'gibbonStaffAbsence.gibbonStaffAbsenceID=gibbonStaffAbsenceDate.gibbonStaffAbsenceID AND gibbonStaffAbsenceDate.date=:date')
             ->where('enfPlannedSessionTeacher.enfPlannedSessionID=:enfPlannedSessionID')
             ->bindValue('enfPlannedSessionID', $enfPlannedSessionID)
+            ->bindValue('date', $date)
+            ->groupBy(['enfPlannedSessionTeacher.gibbonPersonID'])
             ->orderBy(['enfPlannedSessionTeacher.timestampCreated', 'gibbonPerson.surname', 'gibbonPerson.preferredName']);
 
         return $this->runSelect($query);

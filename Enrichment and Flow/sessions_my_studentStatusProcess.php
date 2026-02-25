@@ -33,8 +33,11 @@ $_POST = $container->get(Validator::class)->sanitize($_POST);
 $enfSessionStudentID = $_REQUEST['enfSessionStudentID'] ?? '';
 $gibbonPersonID = $_REQUEST['gibbonPersonID'] ?? '';
 $status = $_REQUEST['status'] ?? '';
+$source = $_REQUEST['source'] ?? '';
 
-$URL = Url::fromModuleRoute('Enrichment and Flow', 'sessions_my');
+$URL = $source == 'report' 
+    ? Url::fromModuleRoute('Enrichment and Flow', 'report_sessions_view')
+    : Url::fromModuleRoute('Enrichment and Flow', 'sessions_my');
 
 if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/sessions_my_addEdit.php') == false) {
     header("Location: {$URL}&return=error0");

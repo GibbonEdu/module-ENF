@@ -197,3 +197,25 @@ UPDATE `gibbonAction` SET URLList='sessions_my.php,sessions_my_addEdit.php,sessi
 $sql[$count][0] = '1.4.02';
 $sql[$count][1] = "
 ";
+
+//v1.4.03
+++$count;
+$sql[$count][0] = '1.4.03';
+$sql[$count][1] = "
+INSERT INTO `gibbonAction` (`gibbonActionID`, `gibbonModuleID`, `name`, `precedence`, `category`, `description`, `URLList`, `entryURL`, `entrySidebar`, `defaultPermissionAdmin`, `defaultPermissionTeacher`, `defaultPermissionStudent`, `defaultPermissionParent`, `defaultPermissionSupport`, `categoryPermissionStaff`, `categoryPermissionStudent`, `categoryPermissionParent`, `categoryPermissionOther`) VALUES (NULL, (SELECT gibbonModuleID FROM gibbonModule WHERE name='Enrichment and Flow'), 'Student Sessions', 0, 'Reports', 'View a list of all students and where they are', 'report_sessions_view.php','report_sessions_view.php', 'Y', 'Y', 'Y', 'N', 'N', 'N', 'Y', 'N', 'N', 'N');end
+INSERT INTO `gibbonPermission` (`permissionID` ,`gibbonRoleID` ,`gibbonActionID`) VALUES (NULL , 1, (SELECT gibbonActionID FROM gibbonAction JOIN gibbonModule ON (gibbonAction.gibbonModuleID=gibbonModule.gibbonModuleID) WHERE gibbonModule.name='Enrichment and Flow' AND gibbonAction.name='Student Sessions'));end
+";
+
+//v1.4.04
+++$count;
+$sql[$count][0] = '1.4.04';
+$sql[$count][1] = "
+ALTER TABLE `enfJourney` CHANGE `statusKey` `statusKey` VARCHAR(32) NULL DEFAULT NULL;end
+";
+
+//v1.4.05
+++$count;
+$sql[$count][0] = '1.4.05';
+$sql[$count][1] = "
+ALTER TABLE `enfPlannerEntry` ADD `timestampCreated` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP AFTER `date`;end
+";

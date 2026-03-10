@@ -21,10 +21,10 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 use Gibbon\Data\Validator;
 use Gibbon\FileUploader;
-use Gibbon\Services\Format;
 use Gibbon\Module\EnrichmentandFlow\Domain\OpportunityGateway;
 use Gibbon\Module\EnrichmentandFlow\Domain\OpportunityMentorGateway;
 use Gibbon\Module\EnrichmentandFlow\Domain\OpportunityCreditGateway;
+use Gibbon\Contracts\Filesystem\FileHandler;
 
 require_once '../../gibbon.php';
 
@@ -67,6 +67,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/opport
     }
 
     //Deal with file upload
+    $fileMetaData = null;
     if (!empty($_FILES['file']['tmp_name'])) {
         $fileUploader = new FileUploader($pdo, $session);
         $logo = $fileUploader->uploadFromPost($_FILES['file'], 'enf_opportunityLogo_'.$data['name']);
@@ -76,11 +77,19 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/opport
         }
         else {
             $data['logo'] = $logo;
+            $fileMetaData = $fileUploader->getFileMetaData($logo);
         }
     }
 
     // Create the record
     $enfOpportunityID = $opportunityGateway->insert($data);
+
+    // Record file upload tracking
+    if (!empty($fileMetaData) && !empty($enfOpportunityID)) {
+        if (!$container->get(FileHandler::class)->recordFileUpload($fileMetaData, 'enfOpportunity', $enfOpportunityID, 'logo')) {
+            $partialFail = true;
+        }
+    }
 
     //Deal with mentors
     $opportunityMentorGateway = $container->get(OpportunityMentorGateway::class);

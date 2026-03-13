@@ -1,5 +1,10 @@
 CHANGELOG
 =========
+
+v1.4.06
+-------
+Added comprehensive file upload tracking system to monitor and manage all file uploads across the system
+
 v1.4.00
 -------
 Added session planning tools and streamlined the student planner

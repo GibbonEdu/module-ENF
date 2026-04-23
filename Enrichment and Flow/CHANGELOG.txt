@@ -1,6 +1,6 @@
 CHANGELOG
 =========
-v1.4.06
+v1.4.07
 -------
 added an error checking for empty values in add journey record page
 

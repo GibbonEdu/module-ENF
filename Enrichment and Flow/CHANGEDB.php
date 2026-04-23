@@ -220,8 +220,8 @@ $sql[$count][1] = "
 ALTER TABLE `enfPlannerEntry` ADD `timestampCreated` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP AFTER `date`;end
 ";
 
-//v1.4.06
+//v1.4.07
 ++$count;
-$sql[$count][0] = '1.4.06';
+$sql[$count][0] = '1.4.07';
 $sql[$count][1] = "
 ";

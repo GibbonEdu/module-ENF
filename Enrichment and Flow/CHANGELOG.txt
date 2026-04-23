@@ -1,5 +1,9 @@
 CHANGELOG
 =========
+v1.4.06
+-------
+added an error checking for empty values in add journey record page
+
 v1.4.00
 -------
 Added session planning tools and streamlined the student planner

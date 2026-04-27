@@ -223,4 +223,11 @@ ALTER TABLE `enfPlannerEntry` ADD `timestampCreated` TIMESTAMP NOT NULL DEFAULT 
 //v1.4.06
 ++$count;
 $sql[$count][0] = '1.4.06';
-$sql[$count][1] = "";
+$sql[$count][1] = "
+";
+
+//v1.4.07
+++$count;
+$sql[$count][0] = '1.4.07';
+$sql[$count][1] = "
+";

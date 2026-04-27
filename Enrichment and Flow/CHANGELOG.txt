@@ -1,12 +1,12 @@
 CHANGELOG
 =========
-v1.4.07
+v1.5.00
 -------
-added an error checking for empty values in add journey record page
+Added comprehensive file upload tracking system to monitor and manage all file uploads across the system
 
 v1.4.06
 -------
-Added comprehensive file upload tracking system to monitor and manage all file uploads across the system
+added an error checking for empty values in add journey record page
 
 v1.4.00
 -------

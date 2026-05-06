@@ -21,8 +21,8 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 use Gibbon\Data\Validator;
 use Gibbon\FileUploader;
-use Gibbon\Services\Format;
 use Gibbon\Module\EnrichmentandFlow\Domain\DomainGateway;
+use Gibbon\Contracts\Filesystem\FileHandler;
 
 require_once '../../gibbon.php';
 
@@ -63,6 +63,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/domain
     }
 
     //Deal with file upload
+    $fileMetaData = null;
     if (!empty($_FILES['file']['tmp_name'])) {
         $fileUploader = new FileUploader($pdo, $session);
         $logo = $fileUploader->uploadFromPost($_FILES['file'], 'enf_domainLogo_'.$data['name']);
@@ -72,11 +73,19 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/domain
         }
         else {
             $data['logo'] = $logo;
+            $fileMetaData = $fileUploader->getFileMetaData($logo);
         }
     }
 
     // Create the record
     $enfDomainID = $domainGateway->insert($data);
+
+    // Record file upload tracking
+    if (!empty($fileMetaData) && !empty($enfDomainID)) {
+        if (!$container->get(FileHandler::class)->recordFileUpload($fileMetaData, 'enfDomain', $enfDomainID, 'logo')) {
+            $partialFail = true;
+        }
+    }
 
     if ($enfDomainID && !$partialFail) {
         $URL .= "&return=success0&editID=$enfDomainID";

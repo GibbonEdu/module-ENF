@@ -21,9 +21,9 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 use Gibbon\Data\Validator;
 use Gibbon\FileUploader;
-use Gibbon\Services\Format;
 use Gibbon\Module\EnrichmentandFlow\Domain\CreditGateway;
 use Gibbon\Module\EnrichmentandFlow\Domain\CreditMentorGateway;
+use Gibbon\Contracts\Filesystem\FileHandler;
 
 require_once '../../gibbon.php';
 
@@ -69,6 +69,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/credit
     }
 
     //Deal with file upload
+    $fileMetaData = null;
     if (!empty($_FILES['file']['tmp_name'])) {
         $fileUploader = new FileUploader($pdo, $session);
         $logo = $fileUploader->uploadFromPost($_FILES['file'], 'enf_creditLogo_'.$data['name']);
@@ -78,11 +79,19 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/credit
         }
         else {
             $data['logo'] = $logo;
+            $fileMetaData = $fileUploader->getFileMetaData($logo);
         }
     }
 
     // Create the record
     $enfCreditID = $creditGateway->insert($data);
+
+    // Record file upload tracking
+    if (!empty($fileMetaData) && !empty($enfCreditID)) {
+        if (!$container->get(FileHandler::class)->recordFileUpload($fileMetaData, 'enfCredit', $enfCreditID, 'logo')) {
+            $partialFail = true;
+        }
+    }
 
     //Deal with mentors
     $creditMentorGateway = $container->get(CreditMentorGateway::class);

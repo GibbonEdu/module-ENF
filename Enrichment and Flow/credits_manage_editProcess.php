@@ -21,9 +21,9 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 use Gibbon\Data\Validator;
 use Gibbon\FileUploader;
-use Gibbon\Services\Format;
 use Gibbon\Module\EnrichmentandFlow\Domain\CreditGateway;
 use Gibbon\Module\EnrichmentandFlow\Domain\CreditMentorGateway;
+use Gibbon\Contracts\Filesystem\FileHandler;
 
 require_once '../../gibbon.php';
 
@@ -43,6 +43,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/credit
 
     // Proceed!
     $creditGateway = $container->get(CreditGateway::class);
+    $credit = $creditGateway->getByID($enfCreditID);
 
     $data = [
         'enfDomainID' => $_POST['enfDomainID'] ?? '',
@@ -68,6 +69,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/credit
     }
 
     //Deal with file upload
+    $fileMetaData = null;
     $data['logo'] = $_POST['logo'];
     if (!empty($_FILES['file']['tmp_name'])) {
         $fileUploader = new FileUploader($pdo, $session);
@@ -78,11 +80,23 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/credit
         }
         else {
             $data['logo'] = $logo;
+            $fileMetaData = $fileUploader->getFileMetaData($logo);
         }
     }
 
     // Update the record
     $updated = $creditGateway->update($enfCreditID, $data);
+
+    // Record file upload tracking
+    if (!empty($fileMetaData) && !empty($enfCreditID)) {
+        if (!$container->get(FileHandler::class)->recordFileUpload($fileMetaData, 'enfCredit', $enfCreditID, 'logo')) {
+            $partialFail = true;
+        }
+    }
+
+    if (empty($data['logo']) && !empty($credit['logo'])) {
+        $deleted = $container->get(FileHandler::class)->deleteFile('enfCredit', $enfCreditID, 'logo');
+    }
 
     //Deal with mentors
     $creditMentorGateway = $container->get(CreditMentorGateway::class);

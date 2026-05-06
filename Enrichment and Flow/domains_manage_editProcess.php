@@ -21,8 +21,8 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 use Gibbon\Data\Validator;
 use Gibbon\FileUploader;
-use Gibbon\Services\Format;
 use Gibbon\Module\EnrichmentandFlow\Domain\DomainGateway;
+use Gibbon\Contracts\Filesystem\FileHandler;
 
 require_once '../../gibbon.php';
 
@@ -40,6 +40,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/domain
 
     // Proceed!
     $domainGateway = $container->get(DomainGateway::class);
+    $domain = $domainGateway->getByID($enfDomainID);
 
     $data = [
         'name'              => $_POST['name'] ?? '',
@@ -64,9 +65,8 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/domain
         exit;
     }
 
-
-
     //Deal with file upload
+    $fileMetaData = null;
     $data['logo'] = $_POST['logo'];
     if (!empty($_FILES['file']['tmp_name'])) {
         $fileUploader = new FileUploader($pdo, $session);
@@ -77,11 +77,23 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/domain
         }
         else {
             $data['logo'] = $logo;
+            $fileMetaData = $fileUploader->getFileMetaData($logo);
         }
     }
 
     // Update the record
     $updated = $domainGateway->update($enfDomainID, $data);
+
+    // Record file upload tracking
+    if (!empty($fileMetaData) && !empty($enfDomainID)) {
+        if (!$container->get(FileHandler::class)->recordFileUpload($fileMetaData, 'enfDomain', $enfDomainID, 'logo')) {
+            $partialFail = true;
+        }
+    }
+
+    if (empty($data['logo']) && !empty($domain['logo'])) {
+        $deleted = $container->get(FileHandler::class)->deleteFile('enfDomain', $enfDomainID, 'logo');
+    }
 
     $URL .= !$updated
         ? "&return=error2"

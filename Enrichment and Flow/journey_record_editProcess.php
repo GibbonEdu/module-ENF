@@ -26,6 +26,7 @@ use Gibbon\Module\EnrichmentandFlow\Domain\JourneyGateway;
 use Gibbon\Domain\System\DiscussionGateway;
 use Gibbon\Comms\NotificationSender;
 use Gibbon\Domain\System\NotificationGateway;
+use Gibbon\Contracts\Filesystem\FileHandler;
 
 require_once '../../gibbon.php';
 
@@ -46,8 +47,9 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/journe
     exit;
 } else {
     // Proceed!
+    $discussionGateway = $container->get(DiscussionGateway::class);
     $journeyGateway = $container->get(JourneyGateway::class);
-    $result = $container->get(JourneyGateway::class)->selectJourneyByID($enfJourneyID);
+    $result = $journeyGateway->selectJourneyByID($enfJourneyID);
 
     if ($result->rowCount() != 1) {
         $URL .= '&return=error2';
@@ -63,8 +65,6 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/journe
         exit;
     }
 
-    $discussionGateway = $container->get(DiscussionGateway::class);
-
     $data = [
         'foreignTable'         => 'enfJourney',
         'foreignTableID'       => $enfJourneyID,
@@ -78,12 +78,14 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/journe
     ];
 
     //Deal with file upload
+    $fileMetaData = null;
     if ($data['attachmentType'] == 'File' && !empty($_FILES['evidenceFile']['tmp_name'])) {
         $fileUploader = new FileUploader($pdo, $session);
         $logo = $fileUploader->uploadFromPost($_FILES['evidenceFile'], 'enf_evidence_'.$session->get('gibbonPersonID'));
 
         if (!empty($logo)) {
             $data['attachmentLocation'] = $logo;
+            $fileMetaData = $fileUploader->getFileMetaData($logo);
         }
     }
 
@@ -95,7 +97,14 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/journe
     }
 
     // Insert the record
-    $inserted = $discussionGateway->insert($data);
+    $gibbonDiscussionID = $discussionGateway->insert($data);
+
+    // Record file upload tracking (file belongs to enfJourney, not gibbonDiscussion)
+    if (!empty($fileMetaData) && !empty($gibbonDiscussionID)) {
+        if (!$container->get(FileHandler::class)->recordFileUpload($fileMetaData, 'gibbonDiscussion', $gibbonDiscussionID, 'attachmentLocation')) {
+            $partialFail = true;
+        }
+    }
 
     //Update the journey
     $data = [
@@ -117,7 +126,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/journe
     $notificationSender->sendNotifications();
 
 
-    $URL .= !$inserted && !$updated
+    $URL .= !$gibbonDiscussionID && !$updated
         ? "&return=error2"
         : "&return=success0";
 

@@ -20,6 +20,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
 use Gibbon\Data\Validator;
+use Gibbon\Contracts\Filesystem\FileHandler;
 use Gibbon\Module\EnrichmentandFlow\Domain\OpportunityGateway;
 use Gibbon\Module\EnrichmentandFlow\Domain\OpportunityMentorGateway;
 use Gibbon\Module\EnrichmentandFlow\Domain\OpportunityCreditGateway;
@@ -53,6 +54,8 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/opport
     }
 
     $deleted = $opportunityGateway->delete($enfOpportunityID);
+
+    $fileDeleted = $container->get(FileHandler::class)->deleteFile('enfOpportunity', $enfOpportunityID, 'logo');
 
     $opportunityMentorGateway = $container->get(OpportunityMentorGateway::class);
     $opportunityMentorGateway->deleteMentorsByOpportunity($enfOpportunityID);

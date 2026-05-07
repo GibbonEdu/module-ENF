@@ -20,6 +20,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
 use Gibbon\Data\Validator;
+use Gibbon\Contracts\Filesystem\FileHandler;
 use Gibbon\Module\EnrichmentandFlow\Domain\DomainGateway;
 
 require_once '../../gibbon.php';
@@ -50,6 +51,8 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/domain
     }
 
     $deleted = $domainGateway->delete($enfDomainID);
+
+    $fileDeleted = $container->get(FileHandler::class)->deleteFile('enfDomain', $enfDomainID, 'logo');
 
     $URL .= !$deleted
         ? '&return=error2'

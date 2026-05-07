@@ -20,6 +20,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
 use Gibbon\Data\Validator;
+use Gibbon\Contracts\Filesystem\FileHandler;
 use Gibbon\Module\EnrichmentandFlow\Domain\CreditGateway;
 use Gibbon\Module\EnrichmentandFlow\Domain\CreditMentorGateway;
 
@@ -53,6 +54,8 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/credit
     }
 
     $deleted = $creditGateway->delete($enfCreditID);
+
+    $fileDeleted = $container->get(FileHandler::class)->deleteFile('enfCredit', $enfCreditID, 'logo');
 
     $creditMentorGateway = $container->get(CreditMentorGateway::class);
     $creditMentorGateway->deleteMentorsByCredit($enfCreditID);

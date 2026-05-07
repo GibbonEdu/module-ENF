@@ -20,6 +20,8 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
 use Gibbon\Data\Validator;
+use Gibbon\Contracts\Filesystem\FileHandler;
+use Gibbon\Domain\System\DiscussionGateway;
 use Gibbon\Module\EnrichmentandFlow\Domain\JourneyGateway;
 
 require_once '../../gibbon.php';
@@ -62,6 +64,14 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/journe
         exit();
     }
 
+    $discussionGateway = $container->get(DiscussionGateway::class);
+    $discussions = $discussionGateway->selectBy(['foreignTable' => 'enfJourney', 'foreignTableID' => $enfJourneyID], ['gibbonDiscussionID'])->fetchAll();
+
+    foreach ($discussions as $discussion) {
+        $fileDeleted = $container->get(FileHandler::class)->deleteFile('gibbonDiscussion', $discussion['gibbonDiscussionID'], 'attachmentLocation');
+    }
+
+    $discussionGateway->deleteWhere(['foreignTable' => 'enfJourney', 'foreignTableID' => $enfJourneyID]);
     $deleted = $journeyGateway->delete($enfJourneyID);
 
     $URL .= !$deleted

@@ -220,8 +220,25 @@ $sql[$count][1] = "
 ALTER TABLE `enfPlannerEntry` ADD `timestampCreated` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP AFTER `date`;end
 ";
 
+//v1.4.06
+++$count;
+$sql[$count][0] = '1.4.06';
+$sql[$count][1] = "
+ALTER TABLE `enfBlock` ADD `active` ENUM('Y','N') NOT NULL DEFAULT 'Y' AFTER `name`;end
+";
+
 //v1.4.07
 ++$count;
 $sql[$count][0] = '1.4.07';
 $sql[$count][1] = "
+";
+
+//v1.4.08
+++$count;
+$sql[$count][0] = '1.4.08';
+$sql[$count][1] = "
+INSERT INTO `gibbonAction` (`gibbonActionID`, `gibbonModuleID`, `name`, `precedence`, `category`, `description`, `URLList`, `entryURL`, `entrySidebar`, `defaultPermissionAdmin`, `defaultPermissionTeacher`, `defaultPermissionStudent`, `defaultPermissionParent`, `defaultPermissionSupport`, `categoryPermissionStaff`, `categoryPermissionStudent`, `categoryPermissionParent`, `categoryPermissionOther`) VALUES (NULL, (SELECT gibbonModuleID FROM gibbonModule WHERE name='Enrichment and Flow'), 'Session Planner', 0, 'Flow', 'Manage all sessions', 'session_planner.php','session_planner.php', 'Y', 'Y', 'N', 'N', 'N', 'N', 'Y', 'N', 'N', 'N');end
+INSERT INTO `gibbonPermission` (`permissionID` ,`gibbonRoleID` ,`gibbonActionID`) VALUES (NULL , 1, (SELECT gibbonActionID FROM gibbonAction JOIN gibbonModule ON (gibbonAction.gibbonModuleID=gibbonModule.gibbonModuleID) WHERE gibbonModule.name='Enrichment and Flow' AND gibbonAction.name='Session Planner'));end
+ALTER TABLE `enfBlockFacility` ADD `sequenceNumber` INT(3) NOT NULL AFTER `gibbonSpaceID`;end
+ALTER TABLE `enfPlannedSession` ADD `unlisted` ENUM('Y','N') NOT NULL DEFAULT 'N' AFTER `gibbonSpaceID`;end
 ";

@@ -60,7 +60,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/sessio
     foreach ($blocks as $block) {
         $capacity = ['used' => 0, 'available' => 0];
 
-        $sessions = $plannedSessionGateway->selectPlannedSessionsByDate($block['enfBlockID'], $date)->fetchAll();
+        $sessions = $plannedSessionGateway->selectPlannedSessionsByDate($block['enfBlockID'], $date, true)->fetchAll();
         $sessions = array_map(function ($values) use (&$plannedSessionTeacherGateway, &$sessionStudentGateway, &$date, &$capacity) {
             $values['teachers'] = $plannedSessionTeacherGateway->selectTeachersByPlannedSession($values['enfPlannedSessionID'], $date)->fetchAll();
             $values['students'] = $sessionStudentGateway->selectStudentsByPlannedSessionAndDate($values['enfPlannedSessionID'], $date)->fetchAll();
@@ -94,7 +94,11 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/sessio
         $table->addColumn('type', __('Type'))
             ->width('15%')
             ->format(function($values){
-                return ENFFormat::sessionTag($values['type']);
+                $output = ENFFormat::sessionTag($values['type']);
+                if ($values['unlisted'] == 'Y') {
+                    $output .= '<br/>'. Format::tag(__('Unlisted'), 'dull mt-1');
+                }
+                return $output;
             });
 
         $table->addColumn('studentCount', __('Students'))
@@ -139,6 +143,10 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/sessio
                 $actions->addAction('add', __('Add'))
                     ->setURL('/modules/Enrichment and Flow/sessions_view_addEditStudent.php')
                     ->setIcon('user-plus');
+
+                $actions->addAction('edit', __('Edit'))
+                    ->setURL('/modules/Enrichment and Flow/sessions_my_addEdit.php')
+                    ->addParam('mode', 'manage');
 
                 $actions->addAction('delete', __('Cancel Session'))
                     ->setURL('/modules/Enrichment and Flow/sessions_my_delete.php')

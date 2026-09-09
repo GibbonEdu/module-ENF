@@ -19,13 +19,13 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-use Gibbon\Http\Url;
 use Gibbon\Data\Validator;
-use Gibbon\Module\EnrichmentandFlow\Domain\SessionGateway;
+use Gibbon\Http\Url;
+use Gibbon\Module\EnrichmentandFlow\Domain\BlockFacilityGateway;
+use Gibbon\Module\EnrichmentandFlow\Domain\BlockGateway;
 use Gibbon\Module\EnrichmentandFlow\Domain\PlannedSessionGateway;
 use Gibbon\Module\EnrichmentandFlow\Domain\PlannedSessionTeacherGateway;
-use Gibbon\Module\EnrichmentandFlow\Domain\BlockGateway;
-use Gibbon\Module\EnrichmentandFlow\Domain\BlockFacilityGateway;
+use Gibbon\Module\EnrichmentandFlow\Domain\SessionGateway;
 
 require_once '../../gibbon.php';
 
@@ -50,11 +50,12 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/sessio
     $plannedSessionTeacherGateway = $container->get(PlannedSessionTeacherGateway::class);
 
     $data = [
-        'enfBlockID'            => $enfBlockID,
-        'enfSessionID'          => $_POST['enfSessionID'] ?? null,
-        'enfBlockFacilityID'    => $_POST['enfBlockFacilityID'] ?? null,
-        'gibbonSpaceID'         => $_POST['gibbonSpaceID'] ?? null,
-        'notes'                 => $_POST['notes'] ?? null,
+        'enfBlockID'         => $_POST['enfBlockID'] ?? null,
+        'enfSessionID'       => $_POST['enfSessionID'] ?? null,
+        'enfBlockFacilityID' => $_POST['enfBlockFacilityID'] ?? null,
+        'gibbonSpaceID'      => $_POST['gibbonSpaceID'] ?? null,
+        'unlisted'           => $_POST['unlisted'] ?? 'N',
+        'notes'              => $_POST['notes'] ?? null,
     ];
 
     // Validate the required values are present

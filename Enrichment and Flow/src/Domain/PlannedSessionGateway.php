@@ -71,11 +71,11 @@ class PlannedSessionGateway extends QueryableGateway
         return $this->runSelect($query);
     }
 
-    public function selectPlannedSessionsByDate(string $enfBlockID, string $date)
+    public function selectPlannedSessionsByDate(string $enfBlockID, string $date, bool $includeUnlisted = false)
     {
         $query = $this
             ->newSelect()
-            ->cols(['enfBlock.name as groupBy', 'enfBlock.enfBlockID', 'enfBlock.name as block','enfBlock.timeStart','enfBlock.timeEnd', 'gibbonDaysOfWeek.name as weekday', 'enfPlannedSession.enfPlannedSessionID', 'enfSession.enfSessionID', 'enfSession.focus', 'enfSession.type', 'gibbonSpace.name as facility', 'COUNT(DISTINCT enfSessionStudent.gibbonPersonID) as students', 'enfSession.maxStudents'])
+            ->cols(['enfBlock.name as groupBy', 'enfBlock.enfBlockID', 'enfBlock.name as block','enfBlock.timeStart','enfBlock.timeEnd', 'gibbonDaysOfWeek.name as weekday', 'enfPlannedSession.enfPlannedSessionID', 'enfSession.enfSessionID', 'enfSession.focus', 'enfSession.type', 'gibbonSpace.gibbonSpaceID', 'gibbonSpace.name as facility', 'enfPlannedSession.unlisted', 'COUNT(DISTINCT enfSessionStudent.gibbonPersonID) as students', 'enfSession.maxStudents'])
             ->from('enfBlock')
             ->innerJoin('enfPlannedSession', 'enfBlock.enfBlockID=enfPlannedSession.enfBlockID')
             ->innerJoin('enfSession', 'enfSession.enfSessionID=enfPlannedSession.enfSessionID')
@@ -86,6 +86,10 @@ class PlannedSessionGateway extends QueryableGateway
             ->bindValue('enfBlockID', $enfBlockID)
             ->groupBy(['enfPlannedSession.enfPlannedSessionID'])
             ->orderBy(['gibbonDaysOfWeek.sequenceNumber', 'enfBlock.timeStart', 'enfSession.type', 'enfSession.focus']);
+
+        if (!$includeUnlisted) {
+            $query->where('enfPlannedSession.unlisted="N"');
+        }
 
         return $this->runSelect($query);
     }
@@ -124,6 +128,7 @@ class PlannedSessionGateway extends QueryableGateway
             ->leftJoin('gibbonSpace', 'gibbonSpace.gibbonSpaceID=enfPlannedSession.gibbonSpaceID')
             ->leftJoin('gibbonDaysOfWeek', 'gibbonDaysOfWeek.gibbonDaysOfWeekID=enfBlock.gibbonDaysOfWeekID')
             ->where('enfPlannedSession.enfBlockID=:enfBlockID')
+            ->where('enfPlannedSession.unlisted="N"')
             ->bindValue('enfBlockID', $enfBlockID)
             ->bindValue('date', $date)
             ->groupBy(['enfPlannedSession.enfPlannedSessionID'])

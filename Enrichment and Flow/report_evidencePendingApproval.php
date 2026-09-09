@@ -31,9 +31,7 @@ $highestAction = getHighestGroupedAction($guid, '/modules/Enrichment and Flow/re
 
 if (isActionAccessible($guid, $connection2, "/modules/Enrichment and Flow/report_evidencePendingApproval.php")==FALSE) {
     //Acess denied
-    print "<div class='error'>" ;
-        print __( "You do not have access to this action.") ;
-    print "</div>" ;
+    $page->addError(__('You do not have access to this action.'));
 }
 else {
     //Proceed!

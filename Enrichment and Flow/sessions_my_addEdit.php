@@ -19,13 +19,14 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-use Gibbon\Http\Url;
-use Gibbon\Forms\Form;
-use Gibbon\Module\EnrichmentandFlow\Domain\BlockFacilityGateway;
-use Gibbon\Module\EnrichmentandFlow\Domain\SessionGateway;
-use Gibbon\Module\EnrichmentandFlow\Domain\PlannedSessionGateway;
 use Gibbon\Forms\DatabaseFormFactory;
+use Gibbon\Forms\Form;
+use Gibbon\Http\Url;
+use Gibbon\Module\EnrichmentandFlow\Domain\BlockFacilityGateway;
 use Gibbon\Module\EnrichmentandFlow\Domain\BlockGateway;
+use Gibbon\Module\EnrichmentandFlow\Domain\PlannedSessionGateway;
+use Gibbon\Module\EnrichmentandFlow\Domain\PlannedSessionTeacherGateway;
+use Gibbon\Module\EnrichmentandFlow\Domain\SessionGateway;
 use Gibbon\Support\Facades\Access;
 
 if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/sessions_my_addEdit.php') == false) {
@@ -45,14 +46,19 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/sessio
         $page->return->setEditLink(Url::fromModuleRoute('Enrichment and Flow', 'sessions_my_addEdit')->withQueryParam('enfPlannedSessionID', $_GET['editID']));
     }
 
-    $block = $container->get(BlockGateway::class)->getByID($enfBlockID);
-    if (empty($block)) {
+    $blockGateway = $container->get(BlockGateway::class);
+
+    $block = $blockGateway->getByID($enfBlockID);
+    $blocks = $blockGateway->selectBlocks()->fetchAll();
+
+    if (empty($block) || empty($blocks)) {
         $page->addError(__('The specified record cannot be found.'));
         return;
     }
 
     $sessionGateway = $container->get(SessionGateway::class);
     $plannedSessionGateway = $container->get(PlannedSessionGateway::class);
+    $plannedSessionTeacherGateway = $container->get(PlannedSessionTeacherGateway::class);
 
     $values = $plannedSessionGateway->getByID($enfPlannedSessionID);
     
@@ -64,24 +70,43 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/sessio
     
     $form->addHiddenValue('address', $session->get('address'));
     $form->addHiddenValue('enfPlannedSessionID', $enfPlannedSessionID);
-    $form->addHiddenValue('enfBlockID', $enfBlockID);
     $form->addHiddenValue('mode', $mode);
+
+    $form->addSelect('enfBlockID')
+        ->label(__('Block'))
+        ->fromArray($blocks, 'enfBlockID', 'name')
+        ->required()
+        ->selected($block['enfBlockID']);
 
     $canManage = Access::allows('Enrichment and Flow', 'sessions_view', 'All Sessions_manage');
     if ($mode == 'manage' && $canManage) {
+        $teacher = $plannedSessionTeacherGateway->selectTeachersByPlannedSession($enfPlannedSessionID, date('Y-m-d'))->fetch();
+
         $form->addSelectStaff('gibbonPersonID')
             ->label(__('Person'))
             ->placeholder()
-            ->required();
+            ->required()
+            ->selected($teacher['gibbonPersonID'] ?? '');
     }
 
     if (!empty($enfPlannedSessionID)) {
-        $sessionDetails = $sessionGateway->getByID($values['enfSessionID']);
-        $form->addHiddenValue('enfSessionID', $values['enfSessionID']);
-        $form->addTextField('session')
-            ->label(__('Session'))
-            ->readOnly()
-            ->setValue($sessionDetails['focus']);
+
+        if ($canManage) {
+            $sessions = $sessionGateway->selectSessionList()->fetchAll();
+            $form->addSearchSelect('enfSessionID')
+                ->label(__('Session'))
+                ->fromArray($sessions, 'enfSessionID', 'focus', 'type')
+                ->placeholder()
+                ->required()
+                ->selected($values['enfSessionID']);
+        } else {
+            $sessionDetails = $sessionGateway->getByID($values['enfSessionID']);
+            $form->addHiddenValue('enfSessionID', $values['enfSessionID']);
+            $form->addTextField('session')
+                ->label(__('Session'))
+                ->readOnly()
+                ->setValue($sessionDetails['focus']);
+        }
     } else {
         $sessions = $sessionGateway->selectSessionList()->fetchAll();
         $sessions[] = ['type' => '+', 'enfSessionID' => 'Create', 'focus' => __('Create a Session')];
@@ -132,6 +157,10 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/sessio
         ->label(__('Other Facility'))
         ->placeholder()
         ->required();
+
+    $row = $form->addRow();
+        $row->addLabel('unlisted', __('Unlisted'))->description(__('If checked, this session will not be available for students to sign-up, but teachers can put students in this session.'));
+        $row->addYesNo('unlisted')->required();
 
     $form->addRow()->addColumn()->addEditor('notes')
         ->label(__('Notes').' ('.__('Optional'.')'))

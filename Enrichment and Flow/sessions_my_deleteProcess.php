@@ -57,7 +57,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/sessio
 
     $teachers = $plannedSessionTeacherGateway->selectBy(['enfPlannedSessionID' => $enfPlannedSessionID])->fetchAll();
 
-    if (count($teachers) > 1) {
+    if (count($teachers) > 1 && $mode != 'manage') {
         // Remove the teacher from the session
         $deleted = $plannedSessionTeacherGateway->deleteWhere(['enfPlannedSessionID' => $enfPlannedSessionID, 'gibbonPersonID' => $session->get('gibbonPersonID')]);
     } else {

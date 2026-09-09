@@ -79,6 +79,10 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/blocks
 
     $form->addSection('Sign Up', __('Sign Up'));
 
+    $row = $form->addRow();
+        $row->addLabel('active', __('Active'));
+        $row->addYesNo('active')->required();
+        
     $form->addYesNo('signUpSameDay')
         ->label(__m('Same-day Sign up'), __('Students can only sign up on the same weekday after the specified time'));
 

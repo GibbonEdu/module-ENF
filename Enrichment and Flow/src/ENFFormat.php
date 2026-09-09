@@ -35,6 +35,15 @@ class ENFFormat
         'Enrichment'    => 'bg-emerald-100 border-emerald-800/15 text-emerald-800',
         'Other'         => 'bg-pink-100 border-pink-800/15 text-pink-800',
     ];
+
+    public static $sessionTypeColours = [
+        'Consolidation' => '#ffb86a',
+        'Extension'     => '#74d4ff',
+        'Innovation'    => '#dab2ff',
+        'Enrichment'    => '#5ee9b5',
+        'Other'         => '#fda5d5',
+    ];
+
     public static function sessionTag(string $type, ?string $tag = null)
     {
         return Format::tag($tag ?? $type, self::$sessionTypes[$type] ?? '');

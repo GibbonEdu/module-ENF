@@ -55,6 +55,7 @@ class BlockGateway extends QueryableGateway
         $sql = "SELECT enfBlock.enfBlockID, enfBlock.name, enfBlock.timeStart, enfBlock.timeEnd, enfBlock.signUpSameDay, enfBlock.signUpStart, gibbonDaysOfWeek.name as weekday
                 FROM enfBlock
                 JOIN gibbonDaysOfWeek ON (gibbonDaysOfWeek.gibbonDaysOfWeekID=enfBlock.gibbonDaysOfWeekID)
+                WHERE enfBlock.active='Y'
                 ORDER BY gibbonDaysOfWeek.sequenceNumber, enfBlock.timeStart";
 
         return $this->db()->select($sql, $data);
@@ -67,6 +68,7 @@ class BlockGateway extends QueryableGateway
                 FROM enfBlock
                 JOIN gibbonDaysOfWeek ON (gibbonDaysOfWeek.gibbonDaysOfWeekID=enfBlock.gibbonDaysOfWeekID)
                 WHERE gibbonDaysOfWeek.name=:weekday
+                AND enfBlock.active='Y'
                 ORDER BY gibbonDaysOfWeek.sequenceNumber, enfBlock.timeStart";
 
         return $this->db()->select($sql, $data);

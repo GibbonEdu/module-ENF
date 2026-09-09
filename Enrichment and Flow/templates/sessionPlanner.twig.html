@@ -1,0 +1,202 @@
+{#<!--
+Gibbon: the flexible, open school platform
+Founded by Ross Parker at ICHK Secondary. Built by Ross Parker, Sandra Kuipers and the Gibbon community (https://gibbonedu.org/about/)
+Copyright © 2010, Gibbon Foundation
+Gibbon™, Gibbon Education Ltd. (Hong Kong)
+
+This is a Gibbon template file, written in HTML and Twig syntax.
+For info about editing, see: https://twig.symfony.com/doc/2.x/
+-->#}
+
+{% import _self as planner %}
+
+<div class="flex justify-between items-center">
+    <h2>{{ block.name }}</h2>
+
+    <div>{{ addButton|raw }}</div>
+</div>
+
+<div class="mb-2 text-sm">
+    {{ __('Signed up:') }} <span class="tag empty">{{ capacity.used }}</span> &nbsp;&nbsp;
+    {{ __('Capacity:') }} <span class="tag empty">{{ capacity.available }}</span>
+</div>
+
+<section id="plannerBlock{{ block.enfBlockID }}" class="h-full flex font-sans" 
+
+    x-data="{ 
+        
+        handleSortSession(item, position) { 
+            console.log(item);
+            
+            var session = document.getElementById('session-{{ block.enfBlockID }}-' + item);
+            console.log(session.parentNode);
+
+            console.log(session.parentNode.querySelectorAll('div.sessionItem').length);
+
+            var sessionFacility = session.querySelector('input[name^=\'facility\']');
+            sessionFacility.value = session.parentNode.dataset.facility;
+            console.log(sessionFacility);
+        },
+
+
+        handleSortTeacher(item, position) { 
+            console.log(item);
+            
+            var teacher = document.getElementById('teacher-{{ block.enfBlockID }}-' + item);
+
+            console.log(teacher.parentNode);
+
+            var teacherSession = teacher.querySelector('input[name^=\'teacher\']');
+            teacherSession.value = teacher.parentNode.dataset.session ?? '0';
+            console.log(teacherSession);
+        },
+        
+    }"
+
+>
+
+    
+
+    {% if facilities %}
+
+    <div id="facilities" class="facilitiesContainer w-3/4 rounded-md border bg-gray-100 mr-4 mb-4">
+        {% for enfBlockFacilityID, facility in facilities %}
+
+        <div class="flex gap-2 p-3 -mb-px {{ not loop.last ? 'border-b' }}">
+            <div class="w-24 h-full flex flex-col justify-center items-start text-xs text-gray-600">
+                <a class="flex-1 font-bold text-sm text-gray-800 no-underline hover:underline leading-tight" href="{{ absoluteURL}}/index.php?q=/modules/Timetable/tt_space_view.php&gibbonSpaceID={{ facility.gibbonSpaceID|url_encode }}" target="_blank">
+                    {{ facility.name }}
+                </a>
+
+                {% if facility.enfBlockFacilityID is empty %}
+                    <div class="tag mt-2">{{ __('Other') }}</div>
+                {% endif %}
+
+            </div>
+
+            <div x-sort="handleSortSession" x-sort:group="sessions{{ block.enfBlockID }}" class="sessionGroup flex-1 flex flex-col gap-2"  data-facility="{{ facility.gibbonSpaceID }}">
+            {% for session in sessions[facility.gibbonSpaceID] %}
+                <div x-sort:item="{{ session.enfPlannedSessionID }}" id="session-{{ block.enfBlockID }}-{{ session.enfPlannedSessionID }}" class="sessionItem rounded-md border px-3 py-1 {{ session.css }}" >
+                    
+                    <input type="hidden" name="facility[{{ session.enfPlannedSessionID }}]" value="{{ facility.gibbonSpaceID }}">
+
+                    <div class="flex items-center gap-2">
+                        <div x-sort:handle class="drag-sort-handle w-3 h-6 -ml-1 hover:bg-gray-200 rounded-tl-md" :class="{'rounded-bl-md': false}"></div>
+
+                        <div class="text-sm font-medium ">
+                            {{ session.focus }}
+
+                            <span class="tag {{ session.css }} text-xxs ml-2 align-middle">
+                                {{ session.type }}
+                            </span>
+                        </div>
+
+                        <div class="flex-1 flex justify-end">
+                            {% for action in session.actions %}
+                                {{ action|raw }}
+                            {% endfor %}
+                        </div>
+                    </div>
+ 
+                    <div x-sort="handleSortTeacher" x-sort:group="teachers{{ block.enfBlockID }}" class="enrolmentGroup flex flex-wrap items-start gap-2 mt-2"
+                        data-session="{{ session.enfPlannedSessionID }}" data-block="{{ block.enfBlockID }}"
+                        data-max="{{ facility.maxParticipants }}" data-count="{{ facility.enrolmentCount }}">
+
+                        {% for person in session.teachers %}
+
+                            {{ planner.staffing(person, block) }}
+
+                        {% endfor %}
+
+                        {% if session.teachers is empty %}
+                            <div x-sort:ignore class="w-full text-sm text-gray-800 font-medium bg-stripe-overlay shadow rounded-md border p-3 mb-2">
+                                {{ icon('solid', 'warning', 'size-6 text-red-700 align-middle mr-2') }}
+                                {{ __('No staff assigned') }}
+                            </div>
+                        {% endif %}
+
+                    </div>
+
+                </div>
+            {% endfor %}
+
+            {% if sessions[facility.gibbonSpaceID]|length == 0 %}
+                <div class="p-2">
+                    {{ __('Available') }}
+                </div>
+            {% endif %}
+            
+
+            
+
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="sticky h-full top-0 w-1/4">
+        <div id="unassigned"
+            class="unassignedContainer w-full bg-gray-100 border p-3 mb-4 pb-4 rounded-md h-full max-h-screen overflow-y-scroll">
+
+            <div class="flex justify-between items-center mb-2 text-xs text-gray-600">
+                <h5 class="mt-0 p-0">
+                    {{ __('Unassigned') }}
+                </h5>
+
+                <div class="w-24 text-right">
+                    <!-- Current: <span class="enrolmentCount">0</span> -->
+                </div>
+            </div>
+
+
+            <div x-sort="handleSortTeacher" x-sort:group="teachers{{ block.enfBlockID }}" class="enrolmentGroup h-full" data-group="0" style="min-height: 8rem;">
+
+                {% for person in teachers %}
+
+                    {{ planner.staffing(person, block) }}
+
+                {% endfor %}
+
+            </div>
+
+        </div>
+    </div>
+
+    {% endif %}
+
+</section>
+
+{% macro staffing(person, block) %}
+<div x-sort:item="{{ person.gibbonPersonID|trim('0', 'left') }}" id="teacher-{{ block.enfBlockID }}-{{ person.gibbonPersonID|trim('0', 'left') }}" class="groupStaff enrolmentPerson cursor-move hover:bg-blue-100 hover:border-blue-500 flex items-center justify-between bg-white shadow rounded-md mb-2 p-3 text-sm border group"
+    style="min-width: 14rem; max-width: 18rem;" data-person="{{ person.gibbonPersonID|trim('0', 'left') }}" data-preferredName="{{ person.preferredName }}"
+    data-surname="{{ person.surname }}">
+
+    <input type="hidden" name="teacher[{{ block.enfBlockID }}][{{ person.gibbonPersonID|trim('0', 'left') }}]" value="{{ person.enfPlannedSessionID ?? 0 }}">
+
+    <aside class="mr-3 -my-1">
+        <div class="size-7 rounded-full bg-gray-200 overflow-hidden flex items-start justify-center">
+            <img class="w-full" src="{{ absoluteURL }}/{{ person.image_240 }}" onerror="this.src='{{ absoluteURL }}/themes/{{ gibbonThemeName }}/img/anonymous_125.jpg'" />
+        </div>
+    </aside>
+
+    <div class="flex-1 whitespace-nowrap">{{ person.preferredName }} {{ person.surname }}</div>
+
+    {% if person.role == 'Cover' or person.role is empty %}
+        <span class="tag bg-pink-300 text-pink-800 ml-2 inline-flex items-center gap-1  -my-1">
+            {{ icon('solid', 'user', 'size-4 text-pink-500') }} {{ __('Cover') }}
+        </span>
+    {% elseif person.absenceAllDay is not empty %}
+        {% if person.absenceAllDay == 'Y' or ((block.timeStart|default('13:10:00') >= person.absenceStart and block.timeStart|default('13:10:00') < person.absenceEnd) or (person.absenceStart >= block.timeStart|default('13:10:00') and person.absenceStart < block.timeEnd|default('15:30:00')))  %}
+        <span class="tag error ml-2 inline-flex items-center gap-1 -my-1">
+            {{ icon('solid', 'warning', 'size-4 text-red-700') }} {{ __('Absent') }}
+        </span>
+        {% endif %}
+    {% endif %}
+
+</div>
+{% endmacro staffing %}
+
+<script>
+
+
+</script>

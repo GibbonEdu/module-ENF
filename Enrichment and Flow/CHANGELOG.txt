@@ -1,8 +1,13 @@
 CHANGELOG
 =========
+v1.4.08
+-------
+Added a Session Planner to help manage ENF with drag-drop controls
+Added the option for unlisted sessions
+
 v1.4.07
 -------
-added an error checking for empty values in add journey record page
+Added an error checking for empty values in add journey record page
 
 v1.4.00
 -------

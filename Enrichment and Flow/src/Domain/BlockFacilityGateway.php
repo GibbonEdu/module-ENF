@@ -36,10 +36,32 @@ class BlockFacilityGateway extends QueryableGateway
     public function selectFacilitiesByBlock($enfBlockID)
     {
         $data = ['enfBlockID' => $enfBlockID];
-        $sql = "SELECT enfBlockFacility.enfBlockFacilityID, enfBlockFacility.gibbonSpaceID, gibbonSpace.name as space
+        $sql = "SELECT enfBlockFacility.enfBlockFacilityID, enfBlockFacility.gibbonSpaceID, gibbonSpace.name, gibbonSpace.name as space
                 FROM enfBlockFacility 
                 JOIN gibbonSpace ON (gibbonSpace.gibbonSpaceID=enfBlockFacility.gibbonSpaceID)
-                WHERE enfBlockFacility.enfBlockID=:enfBlockID";
+                WHERE enfBlockFacility.enfBlockID=:enfBlockID
+                ORDER BY enfBlockFacility.sequenceNumber, gibbonSpace.name";
+
+        return $this->db()->select($sql, $data);
+    }
+
+    public function selectUsedAndAvailableFacilitiesByBlock($enfBlockID)
+    {
+        $data = ['enfBlockID' => $enfBlockID];
+        $sql = "(
+                    SELECT enfBlockFacility.enfBlockFacilityID, enfBlockFacility.gibbonSpaceID, gibbonSpace.name, gibbonSpace.name as space, enfBlockFacility.sequenceNumber
+                    FROM enfBlockFacility 
+                    JOIN gibbonSpace ON (gibbonSpace.gibbonSpaceID=enfBlockFacility.gibbonSpaceID)
+                    WHERE enfBlockFacility.enfBlockID=:enfBlockID
+                ) UNION ALL (
+                    SELECT NULL as enfBlockFacilityID, gibbonSpace.gibbonSpaceID, gibbonSpace.name, gibbonSpace.name as space, 1000 as sequenceNumber
+                    FROM gibbonSpace
+                    JOIN enfPlannedSession ON (enfPlannedSession.gibbonSpaceID=gibbonSpace.gibbonSpaceID)
+                    JOIN enfSession ON (enfSession.enfSessionID=enfPlannedSession.enfSessionID)
+                    LEFT JOIN enfBlockFacility ON (enfBlockFacility.gibbonSpaceID=gibbonSpace.gibbonSpaceID AND enfBlockFacility.enfBlockID=:enfBlockID)
+                    WHERE enfPlannedSession.enfBlockID=:enfBlockID
+                    AND enfBlockFacility.enfBlockFacilityID IS NULL
+                ) ORDER BY sequenceNumber, name";
 
         return $this->db()->select($sql, $data);
     }

@@ -19,14 +19,14 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
+use Gibbon\Services\Format;
+
 //Module includes
 include './modules/'.$session->get('module').'/moduleFunctions.php';
 
 if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/logo_credits.php') == false) {
     //Acess denied
-    echo "<div class='error'>";
-    echo __('You do not have access to this action.');
-    echo '</div>';
+    $page->addError(__('You do not have access to this action.'));
 } else {
     //Proceed!
     $page->breadcrumbs->add(__('Credits & Licensing'));
@@ -41,11 +41,9 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/logo_c
         ";
         $result = $connection2->prepare($sql);
         $result->execute($data);
-    } catch (PDOException $e) { echo "<div class='error'>".$e->getMessage().'</div>';
+    } catch (PDOException $e) { echo Format::alert($e->getMessage(), 'error');
     }
-    if ($result->rowCount() < 1) { echo "<div class='error'>";
-        echo __('There are no records to display.');
-        echo '</div>';
+    if ($result->rowCount() < 1) { echo Format::alert(__('There are no records to display.'), 'error');
     } else {
         while ($row = $result->fetch()) {
             echo '<h4>'.$row['name'].'</h4>';

@@ -19,11 +19,12 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-use Gibbon\Services\Format;
-use Gibbon\Module\EnrichmentandFlow\Domain\DailyPlannerGateway;
 use Gibbon\Domain\System\SettingGateway;
+use Gibbon\Module\EnrichmentandFlow\Domain\DailyPlannerGateway;
 use Gibbon\Module\EnrichmentandFlow\Domain\SessionStudentGateway;
 use Gibbon\Module\EnrichmentandFlow\ENFFormat;
+use Gibbon\Services\Format;
+use Gibbon\UI\Chart\Chart;
 
 if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/planner_view.php') == false) {
     //Acess denied
@@ -72,12 +73,44 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/planne
 
     $plannerEntries = $dailyPlannerGateway->selectPlannerEntriesByStudent($gibbonPersonID)->fetchGrouped();
 
+    $sessions = [];
+    
+    $chartLabels = $sessionStudentGateway->selectSessionFocusByStudent($gibbonPersonID)->fetchAll(\PDO::FETCH_COLUMN, 0);
+    $chartData = array_combine($chartLabels, array_fill(0, count($chartLabels), 0) );
+    $chartColors = array_combine($chartLabels, array_fill(0, count($chartLabels), 0) );
+
+    foreach ($plannerEntries as $date => $discussion) {
+        $sessions[$date] = $sessionStudentGateway->selectSessionsByStudentsAndDate($gibbonPersonID, $date)->fetchGroupedUnique();
+
+        if (empty($sessions[$date])) continue;
+
+        foreach ($sessions[$date] as $session) {
+            $chartData[$session['focus']] = (($chartData[$session['focus']] ?? 0) + 1);
+            $chartColors[$session['focus']] = ENFFormat::$sessionTypeColours[$session['type']] ?? '#cad5e2';
+        }
+    }
+
+    $chart = Chart::create('unitStats', 'doughnut')
+            ->setOptions([
+                'height' => 80,
+                'legend' => [
+                    'position' => 'right',
+                ]
+            ])
+            ->setLabels($chartLabels)
+            ->setColors(array_values($chartColors));
+
+        $chart->addDataset('pie')
+            ->setData($chartData);
+
+    $page->write($chart->render().'<br><br>');
+
     foreach ($plannerEntries as $date => $discussion) {
         $plannerEntry = current($discussion);
         $taskCode = '';
 
         if (!empty($plannerEntry['enfPlannerEntryID'])) {
-            $studentSessions = $sessionStudentGateway->selectSessionsByStudentsAndDate($gibbonPersonID, $date)->fetchGroupedUnique();
+            $studentSessions = $sessions[$date] ?? [];
 
             if (!empty($studentSessions)) {
                 $taskCode = $page->fetchFromTemplate('sessions.twig.html', [

@@ -120,11 +120,15 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/sessio
     $page->write($table->render($students));
 
 
-    $studentsNotSignedUp = $sessionStudentGateway->selectENFStudentsNotSignedUp($session->get('gibbonSchoolYearID'), $date)->toDataSet();
+    $studentsNotSignedUp = $sessionStudentGateway->selectENFStudentsNotSignedUp($session->get('gibbonSchoolYearID'), $date)->fetchAll();
+    $studentsNotPresent = array_reduce($studentsNotSignedUp, function ($group, $item) {
+        $group += !empty($item['attendanceStatus']) && $item['attendanceStatus'] != 'Present' && $item['attendanceStatus'] != 'Present - Late' ? 1 : 0;
+        return $group;
+    }, 0);
 
     $table = DataTable::create('studentsNotSignedUp');
     $table->setTitle(__m('Not Signed Up'));
-    $table->setDescription(__m('Pending').': '.Format::tag(count($studentsNotSignedUp), 'empty'));
+    $table->setDescription(__m('Pending').': '.Format::tag(count($studentsNotSignedUp) - $studentsNotPresent, 'empty').' &nbsp; '.__m('Absent').': '.Format::tag($studentsNotPresent, 'error'));
 
     $table->modifyRows(function ($values, $row) {
         if (!empty($values['attendanceStatus']) && $values['attendanceStatus'] != 'Present' && $values['attendanceStatus'] != 'Present - Late') $row->addClass('bg-stripe');

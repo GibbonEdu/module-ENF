@@ -54,6 +54,21 @@ class SessionStudentGateway extends QueryableGateway
         return $this->runSelect($query);
     }
 
+    public function selectSessionFocusByStudent($gibbonPersonID)
+    {
+        $query = $this
+            ->newSelect()
+            ->distinct()
+            ->cols(['enfSessionStudent.focus'])
+            ->from('enfSessionStudent')
+            ->where('enfSessionStudent.gibbonPersonID=:gibbonPersonID')
+            ->bindValue('gibbonPersonID', $gibbonPersonID)
+            ->groupBy(['enfSessionStudent.enfSessionStudentID'])
+            ->orderBy(['enfSessionStudent.type']);
+
+        return $this->runSelect($query);
+    }
+
     public function selectSessionsByStudentsAndDate($gibbonPersonID, $date)
     {
         $query = $this
@@ -71,7 +86,7 @@ class SessionStudentGateway extends QueryableGateway
             ->where('enfSessionStudent.date=:date')
             ->bindValue('date', $date)
             ->groupBy(['enfSessionStudent.enfSessionStudentID'])
-            ->orderBy(['enfBlock.timeStart']);
+            ->orderBy(['enfBlock.timeStart', 'enfSessionStudent.type']);
 
         return $this->runSelect($query);
     }

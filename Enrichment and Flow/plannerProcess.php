@@ -67,7 +67,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/planne
         $enfPlannedSessionIDs = [];
     }
 
-    if (($canModify && empty($enfPlannedSessionIDs)) || empty($date)) {
+    if (empty($date)) {
         header("Location: {$URL}&return=error1");
         exit;
     }
@@ -104,35 +104,6 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/planne
         header("Location: {$URL}");
         exit;
     }
-
-    // Sort and save tasks as a JSON
-    // if (!empty($_POST['tasks']) && is_array($_POST['tasks'])) {
-    //     $tasks = array_map(function ($item) {
-    //         $item['category'] = strip_tags($item['category']);
-    //         $item['minutes'] = intval($item['minutes']);
-    //         $item['description'] = strip_tags($item['description']);
-    //         return $item;
-    //     }, $_POST['tasks'] ?? []);
-
-    //     $tasks = array_combine(array_keys($_POST['order'] ?? []), array_values($tasks));
-    //     ksort($tasks);
-
-    //     $taskIDs = [];
-    //     foreach ($tasks as $order => $task) {
-    //         $task['enfPlannerEntryID'] = $enfPlannerEntryID;
-    //         $task['sequenceNumber'] = $order;
-
-    //         if (!empty($task['enfPlannerTaskID'])) {
-    //             $plannerTasksGateway->update($task['enfPlannerTaskID'], $task);
-    //         } else {
-    //             $task['enfPlannerTaskID'] = $plannerTasksGateway->insert($task);
-    //         }
-
-    //         $taskIDs[] = str_pad($task['enfPlannerTaskID'], 12, '0', STR_PAD_LEFT);
-    //     } 
-
-    //     $plannerTasksGateway->deleteTasksByEntryNotInList($enfPlannerEntryID, $taskIDs);
-    // }
 
     // Create session entries
     $partialFail = false;

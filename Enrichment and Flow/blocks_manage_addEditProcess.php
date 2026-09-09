@@ -47,6 +47,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/blocks
         'gibbonDaysOfWeekID' => $_POST['gibbonDaysOfWeekID'] ?? null,
         'timeStart'          => $_POST['timeStart'] ?? '',
         'timeEnd'            => $_POST['timeEnd'] ?? '',
+        'active'             => $_POST['active'] ?? 'N',
         'signUpSameDay'      => $_POST['signUpSameDay'] ?? 'N',
         'signUpStart'        => $_POST['signUpStart'] ?? $_POST['timeStart'] ?? null,
     ];
@@ -87,6 +88,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Enrichment and Flow/blocks
         $facilityIDs = [];
         foreach ($facilities as $order => $facility) {
             $facility['enfBlockID'] = $enfBlockID;
+            $facility['sequenceNumber'] = $order;
 
             if (!empty($facility['enfBlockFacilityID'])) {
                 $blockFacilityGateway->update($facility['enfBlockFacilityID'], $facility);

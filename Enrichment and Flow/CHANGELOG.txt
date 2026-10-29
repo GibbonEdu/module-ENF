@@ -1,5 +1,9 @@
 CHANGELOG
 =========
+v1.5.00
+-------
+Fixed process scripts so a direct link cannot run them
+
 v1.4.08
 -------
 Added a Session Planner to help manage ENF with drag-drop controls

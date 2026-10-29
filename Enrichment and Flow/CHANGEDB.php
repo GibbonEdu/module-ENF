@@ -242,3 +242,9 @@ INSERT INTO `gibbonPermission` (`permissionID` ,`gibbonRoleID` ,`gibbonActionID`
 ALTER TABLE `enfBlockFacility` ADD `sequenceNumber` INT(3) NOT NULL AFTER `gibbonSpaceID`;end
 ALTER TABLE `enfPlannedSession` ADD `unlisted` ENUM('Y','N') NOT NULL DEFAULT 'N' AFTER `gibbonSpaceID`;end
 ";
+
+//v1.5.00
+++$count;
+$sql[$count][0] = '1.5.00';
+$sql[$count][1] = "
+";
